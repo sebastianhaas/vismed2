@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/VTK-6.3.0/lib/vtk.jar" sourcepath="/Users/sebastian/Documents/Development/VTK-6.3.0/java"/>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/VTK-6.3.0/lib/vtk.jar" sourcepath="/Users/sebastian/Documents/Development/VTK-6.3.0/java">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/Users/sebastian/Documents/Development/VTK-6.3.0/lib"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Users/sebastian/Downloads/dcm4che-3.3.7-bin.zip">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/sebastian/Downloads/dcm4che-3.3.7-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/vismed2/lib/miglayout-4.0-swing.jar" sourcepath="/Users/sebastian/Documents/Development/vismed2/lib/miglayout-4.0-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/sebastian/Documents/Development/vismed2/lib/miglayout-4.0-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
