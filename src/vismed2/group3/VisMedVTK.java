@@ -20,7 +20,11 @@ public class VisMedVTK extends JPanel implements ChangeListener {
   private ImageViewerPanel panel1;
   private ImageViewerPanel panel2;
   private JSlider sliceSlider0;
+  private JSlider sliceSlider1;
+  private JSlider sliceSlider2;
   private int currentSlice0 = 0;
+  private int currentSlice1 = 0;
+  private int currentSlice2 = 0;
 
   // -----------------------------------------------------------------
   // Load VTK library and print which library was not properly loaded
@@ -45,18 +49,43 @@ public class VisMedVTK extends JPanel implements ChangeListener {
     dicomReader.SetDirectoryName(directory.getAbsolutePath()); //Spaces in path causing troubles
     dicomReader.Update();
     
-    panel0 = new ImageViewerPanel(ImageViewerPanel.ORIENTATION_XY, dicomReader.GetOutput());
-    panel1 = new ImageViewerPanel(ImageViewerPanel.ORIENTATION_XZ, dicomReader.GetOutput());
-    panel2 = new ImageViewerPanel(ImageViewerPanel.ORIENTATION_YZ, dicomReader.GetOutput());
+    panel0 = new ImageViewerPanel(dicomReader.GetOutput());
+    panel1 = new ImageViewerPanel(dicomReader.GetOutput());
+    panel2 = new ImageViewerPanel(dicomReader.GetOutput());
     
     // Prepare slider
+    JPanel sliderPanel = new JPanel(new MigLayout());
     sliceSlider0 = new JSlider(JSlider.HORIZONTAL, panel0.GetSliceMin(), panel0.GetSliceMax(), currentSlice0);
     sliceSlider0.addChangeListener(this);
+    sliceSlider1 = new JSlider(JSlider.HORIZONTAL, panel1.GetSliceMin(), panel1.GetSliceMax(), currentSlice1);
+    sliceSlider1.addChangeListener(this);
+    sliceSlider2 = new JSlider(JSlider.HORIZONTAL, panel2.GetSliceMin(), panel2.GetSliceMax(), currentSlice2);
+    sliceSlider2.addChangeListener(this);
+    sliderPanel.add(sliceSlider0, "wrap");
+    sliderPanel.add(sliceSlider1, "wrap");
+    sliderPanel.add(sliceSlider2);
 
     add(panel0, "grow");
     add(panel1, "grow, wrap");
     add(panel2, "grow");
-    add(sliceSlider0);
+    add(sliderPanel);
+    
+	Runnable r1 = new Runnable() {
+		public void run() {
+			try {
+				Thread.sleep(1000);
+				panel0.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToXY();
+				panel1.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToXZ();
+				panel2.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToYZ();
+				panel0.GetImageViewer().GetVtkImageViewer().Render();
+				panel1.GetImageViewer().GetVtkImageViewer().Render();
+				panel2.GetImageViewer().GetVtkImageViewer().Render();
+			} catch (InterruptedException iex) {
+			}
+		}
+	};
+	Thread thr1 = new Thread(r1);
+	thr1.start();
   }
 
   public static void main(String s[]) {
@@ -77,6 +106,12 @@ public class VisMedVTK extends JPanel implements ChangeListener {
 		if (e.getSource().equals(sliceSlider0)) {
 			currentSlice0 = sliceSlider0.getValue();
 			panel0.setSlice(currentSlice0);
+		} else if (e.getSource().equals(sliceSlider1)) {
+			currentSlice1 = sliceSlider1.getValue();
+			panel1.setSlice(currentSlice1);
+		} else if (e.getSource().equals(sliceSlider2)) {
+			currentSlice2 = sliceSlider2.getValue();
+			panel2.setSlice(currentSlice2);
 		}
 	}
 }

@@ -15,41 +15,15 @@ public class ImageViewerPanel extends JComponent {
 	public static final int ORIENTATION_YZ = 0;
 	private static final long serialVersionUID = -6951851465094754751L;
 	private VtkImageViewer2Java imageViewer;
-	private int orientation;
 
-	public ImageViewerPanel(int orientation, vtkImageData imageData) {
+	public ImageViewerPanel(vtkImageData imageData) {
 		setLayout(new BorderLayout());
-		this.orientation = orientation;
 		imageViewer = new VtkImageViewer2Java(imageData);
 		add(imageViewer, BorderLayout.CENTER);
-
-		Runnable r1 = new Runnable() {
-			public void run() {
-				try {
-					Thread.sleep(1000);
-					initialize();
-				} catch (InterruptedException iex) {
-				}
-			}
-		};
-		Thread thr1 = new Thread(r1);
-		thr1.start();
 	}
 
-	// Has to be called when render windows are attached to the Swing container
-	private void initialize() {
-		switch (orientation) {
-		case ORIENTATION_XY:
-			imageViewer.GetVtkImageViewer().SetSliceOrientationToXY();
-		case ORIENTATION_XZ:
-			imageViewer.GetVtkImageViewer().SetSliceOrientationToXZ();
-		case ORIENTATION_YZ:
-			imageViewer.GetVtkImageViewer().SetSliceOrientationToYZ();
-		default:
-			imageViewer.GetVtkImageViewer().SetSliceOrientationToXY();
-		}
-		imageViewer.GetVtkImageViewer().SetSlice(imageViewer.GetVtkImageViewer().GetSliceMin());
-		imageViewer.GetVtkImageViewer().Render();
+	public VtkImageViewer2Java GetImageViewer() {
+		return imageViewer;
 	}
 
 	public void setSlice(int slice) {
