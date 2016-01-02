@@ -22,7 +22,7 @@ public class ImageViewerPanel extends JComponent {
 		add(imageViewer, BorderLayout.CENTER);
 	}
 
-	public VtkImageViewer2Java GetImageViewer() {
+	public VtkImageViewer2Java getImageViewer() {
 		return imageViewer;
 	}
 
@@ -30,20 +30,25 @@ public class ImageViewerPanel extends JComponent {
 		imageViewer.GetVtkImageViewer().SetSlice(slice);
 	}
 
-	public int GetSliceOrientation() {
+	public int getSliceOrientation() {
 		return imageViewer.GetVtkImageViewer().GetSliceOrientation();
 	}
 
-	public int GetSliceMax() {
+	public int getSliceMax() {
 		return imageViewer.GetVtkImageViewer().GetSliceMax();
 	}
 
-	public int GetSliceMin() {
+	public int getSliceMin() {
 		return imageViewer.GetVtkImageViewer().GetSliceMin();
 	}
 
-	public int GetSlice() {
+	public int getSlice() {
 		return imageViewer.GetVtkImageViewer().GetSlice();
+	}
+	
+	public void setInputData(vtkImageData data) {
+		imageViewer.GetVtkImageViewer().SetInputData(data);
+		imageViewer.GetVtkImageViewer().UpdateDisplayExtent();
 	}
 }
 

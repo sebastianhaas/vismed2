@@ -1,105 +1,140 @@
 package vismed2.group3;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 import vtk.vtkDICOMImageReader;
+import vtk.vtkImageData;
+import vtk.vtkImageMedian3D;
+import vtk.vtkImageSpatialAlgorithm;
 import vtk.vtkNativeLibrary;
 
-public class VisMedVTK extends JPanel implements ChangeListener {
-  private static final long serialVersionUID = 1L;
-  private ImageViewerPanel panel0;
-  private ImageViewerPanel panel1;
-  private ImageViewerPanel panel2;
-  private JSlider sliceSlider0;
-  private JSlider sliceSlider1;
-  private JSlider sliceSlider2;
-  private int currentSlice0 = 0;
-  private int currentSlice1 = 0;
-  private int currentSlice2 = 0;
+public class VisMedVTK extends JPanel implements ChangeListener, ActionListener {
+	private static final long serialVersionUID = 1L;
+	private vtkDICOMImageReader dicomReader;
+	private vtkImageData currentImageData;
+	private ImageViewerPanel panel0;
+	private ImageViewerPanel panel1;
+	private ImageViewerPanel panel2;
+	private JSlider sliceSlider0;
+	private JSlider sliceSlider1;
+	private JSlider sliceSlider2;
+	private int currentSlice0 = 0;
+	private int currentSlice1 = 0;
+	private int currentSlice2 = 0;
+	private JButton buttonFilterMedian;
+	private StatusBar statusBar;
 
-  // -----------------------------------------------------------------
-  // Load VTK library and print which library was not properly loaded
-  static {
-    if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
-      for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
-        if (!lib.IsLoaded()) {
-          System.out.println(lib.GetLibraryName() + " not loaded");
-        }
-      }
-    }
-    vtkNativeLibrary.DisableOutputWindow(null);
-  }
-
-  // -----------------------------------------------------------------
-  public VisMedVTK() {
-    super(new MigLayout("fill, debug"));
-    
-    // Get DICOM image data
-    vtkDICOMImageReader dicomReader = new vtkDICOMImageReader();
-    File directory = new File("data/Dentascan-0.75-H60s-3");
-    dicomReader.SetDirectoryName(directory.getAbsolutePath()); //Spaces in path causing troubles
-    dicomReader.Update();
-    
-    panel0 = new ImageViewerPanel(dicomReader.GetOutput());
-    panel1 = new ImageViewerPanel(dicomReader.GetOutput());
-    panel2 = new ImageViewerPanel(dicomReader.GetOutput());
-    
-    // Prepare slider
-    JPanel sliderPanel = new JPanel(new MigLayout());
-    sliceSlider0 = new JSlider(JSlider.HORIZONTAL, panel0.GetSliceMin(), panel0.GetSliceMax(), currentSlice0);
-    sliceSlider0.addChangeListener(this);
-    sliceSlider1 = new JSlider(JSlider.HORIZONTAL, panel1.GetSliceMin(), panel1.GetSliceMax(), currentSlice1);
-    sliceSlider1.addChangeListener(this);
-    sliceSlider2 = new JSlider(JSlider.HORIZONTAL, panel2.GetSliceMin(), panel2.GetSliceMax(), currentSlice2);
-    sliceSlider2.addChangeListener(this);
-    sliderPanel.add(sliceSlider0, "wrap");
-    sliderPanel.add(sliceSlider1, "wrap");
-    sliderPanel.add(sliceSlider2);
-
-    add(panel0, "grow");
-    add(panel1, "grow, wrap");
-    add(panel2, "grow");
-    add(sliderPanel);
-    
-	Runnable r1 = new Runnable() {
-		public void run() {
-			try {
-				Thread.sleep(1000);
-				panel0.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToXY();
-				panel1.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToXZ();
-				panel2.GetImageViewer().GetVtkImageViewer().SetSliceOrientationToYZ();
-				panel0.GetImageViewer().GetVtkImageViewer().Render();
-				panel1.GetImageViewer().GetVtkImageViewer().Render();
-				panel2.GetImageViewer().GetVtkImageViewer().Render();
-			} catch (InterruptedException iex) {
+	// -----------------------------------------------------------------
+	// Load VTK library and print which library was not properly loaded
+	static {
+		if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
+			for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
+				if (!lib.IsLoaded()) {
+					System.out.println(lib.GetLibraryName() + " not loaded");
+				}
 			}
 		}
-	};
-	Thread thr1 = new Thread(r1);
-	thr1.start();
-  }
+		vtkNativeLibrary.DisableOutputWindow(null);
+	}
 
-  public static void main(String s[]) {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        JFrame frame = new JFrame("VisMed2 VTK Gruppe 3");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(new VisMedVTK(), BorderLayout.CENTER);
-        frame.setSize(800, 800);
-        frame.setVisible(true);
-      }
-    });
-  }
+	// -----------------------------------------------------------------
+	public VisMedVTK() {
+		super(new BorderLayout());
+
+		// Get DICOM image data
+		dicomReader = new vtkDICOMImageReader();
+		File directory = new File("data/Dentascan-0.75-H60s-3");
+		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
+																	// path
+																	// causing
+																	// troubles
+		dicomReader.Update();
+		currentImageData = dicomReader.GetOutput();
+
+		panel0 = new ImageViewerPanel(currentImageData);
+		panel1 = new ImageViewerPanel(currentImageData);
+		panel2 = new ImageViewerPanel(currentImageData);
+
+		JPanel content = new JPanel(new MigLayout("fill, debug"));
+		
+		// Prepare controls
+		JPanel controlsPanel = new JPanel(new MigLayout());
+
+		JPanel sliderPanel = new JPanel(new MigLayout());
+		sliderPanel.setBorder(BorderFactory.createTitledBorder("Slices"));
+		sliceSlider0 = new JSlider(JSlider.HORIZONTAL, panel0.getSliceMin(), panel0.getSliceMax(), currentSlice0);
+		sliceSlider0.addChangeListener(this);
+		sliceSlider1 = new JSlider(JSlider.HORIZONTAL, panel1.getSliceMin(), panel1.getSliceMax(), currentSlice1);
+		sliceSlider1.addChangeListener(this);
+		sliceSlider2 = new JSlider(JSlider.HORIZONTAL, panel2.getSliceMin(), panel2.getSliceMax(), currentSlice2);
+		sliceSlider2.addChangeListener(this);
+		sliderPanel.add(sliceSlider0, "wrap");
+		sliderPanel.add(sliceSlider1, "wrap");
+		sliderPanel.add(sliceSlider2, "wrap");
+
+		JPanel filterPanel = new JPanel(new MigLayout());
+		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
+		buttonFilterMedian = new JButton("Median Filter");
+		buttonFilterMedian.addActionListener(this);
+		filterPanel.add(buttonFilterMedian);
+
+		controlsPanel.add(sliderPanel, "grow, wrap");
+		controlsPanel.add(filterPanel, "grow");
+
+		content.add(panel0, "grow");
+		content.add(panel1, "grow, wrap");
+		content.add(panel2, "grow");
+		content.add(controlsPanel, "grow, wrap");
+		
+		add(content, BorderLayout.NORTH);
+		statusBar = new StatusBar();
+		add(statusBar, BorderLayout.SOUTH);
+
+		Runnable r1 = new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+					panel0.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXY();
+					panel1.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXZ();
+					panel2.getImageViewer().GetVtkImageViewer().SetSliceOrientationToYZ();
+					panel0.getImageViewer().GetVtkImageViewer().Render();
+					panel1.getImageViewer().GetVtkImageViewer().Render();
+					panel2.getImageViewer().GetVtkImageViewer().Render();
+				} catch (InterruptedException iex) {
+				}
+			}
+		};
+		Thread thr1 = new Thread(r1);
+		thr1.start();
+	}
+
+	public static void main(String s[]) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				JFrame frame = new JFrame("VisMed2 VTK Gruppe 3");
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				frame.getContentPane().setLayout(new BorderLayout());
+				frame.getContentPane().add(new VisMedVTK(), BorderLayout.CENTER);
+				frame.setSize(700, 700);
+				frame.setVisible(true);
+			}
+		});
+	}
 
 	@Override
 	public void stateChanged(ChangeEvent e) {
@@ -113,5 +148,57 @@ public class VisMedVTK extends JPanel implements ChangeListener {
 			currentSlice2 = sliceSlider2.getValue();
 			panel2.setSlice(currentSlice2);
 		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource().equals(buttonFilterMedian)) {
+			vtkImageMedian3D median = new vtkImageMedian3D();
+			median.SetKernelSize(3, 3, 3);
+			applyFilter(median);
+		}
+	}
+
+	public void applyFilter(final vtkImageSpatialAlgorithm filter) {
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		statusBar.setMessage("Applying filter " + filter.GetClassName()+ "...");
+		SwingWorker<vtkImageSpatialAlgorithm, Void> worker = new SwingWorker<vtkImageSpatialAlgorithm, Void>() {
+			
+			private vtkImageSpatialAlgorithm algorithm;
+			
+			@Override
+			public vtkImageSpatialAlgorithm doInBackground() {
+				algorithm = filter;
+				algorithm.SetInputData(currentImageData);
+				algorithm.Update();
+				return algorithm;
+			}
+			
+			@Override
+			public void done() {
+				setCursor(Cursor.getDefaultCursor());
+				statusBar.setMessage("Ready");
+				try {
+					currentImageData = get().GetOutput();
+					panel0.setInputData(currentImageData);
+					panel1.setInputData(currentImageData);
+					panel2.setInputData(currentImageData);
+					panel0.getImageViewer().Render();
+					panel1.getImageViewer().Render();
+					panel2.getImageViewer().Render();
+				} catch (InterruptedException ignore) {
+				} catch (java.util.concurrent.ExecutionException e) {
+					String why = null;
+					Throwable cause = e.getCause();
+					if (cause != null) {
+						why = cause.getMessage();
+					} else {
+						why = e.getMessage();
+					}
+					System.err.println("Error applying filter: " + why);
+				}
+			}
+		};
+		worker.execute();
 	}
 }
