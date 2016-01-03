@@ -17,6 +17,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
+import vismed2.group3.filters.MedianFilter;
 import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
 import vtk.vtkImageMedian3D;
@@ -36,6 +37,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private int currentSlice0 = 0;
 	private int currentSlice1 = 0;
 	private int currentSlice2 = 0;
+	private JButton buttonFilterMedianOrig;
 	private JButton buttonFilterMedian;
 	private StatusBar statusBar;
 
@@ -89,7 +91,10 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		JPanel filterPanel = new JPanel(new MigLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
-		buttonFilterMedian = new JButton("Median Filter");
+		buttonFilterMedianOrig = new JButton("Median Filter (VTK)");
+		buttonFilterMedianOrig.addActionListener(this);
+		filterPanel.add(buttonFilterMedianOrig, "wrap");
+		buttonFilterMedian = new JButton("Median Filter (Own)");
 		buttonFilterMedian.addActionListener(this);
 		filterPanel.add(buttonFilterMedian);
 
@@ -152,9 +157,13 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource().equals(buttonFilterMedian)) {
+		if (e.getSource().equals(buttonFilterMedianOrig)) {
 			vtkImageMedian3D median = new vtkImageMedian3D();
 			median.SetKernelSize(3, 3, 3);
+			applyFilter(median);
+		} else if (e.getSource().equals(buttonFilterMedian)) {
+			MedianFilter median = new MedianFilter();
+			//median.SetKernelSize(3, 3, 3); selbst implementieren und verwenden ;)
 			applyFilter(median);
 		}
 	}
