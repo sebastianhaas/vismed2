@@ -18,6 +18,7 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 import vismed2.group3.filters.MedianFilter;
+import vismed2.group3.filters.ThresholdFilter;
 import vismed2.group3.filters.VtkJavaFilter;
 import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
@@ -112,7 +113,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		Runnable r1 = new Runnable() {
 			public void run() {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(1500);
 					panel0.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXY();
 					panel1.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXZ();
 					panel2.getImageViewer().GetVtkImageViewer().SetSliceOrientationToYZ();
@@ -159,10 +160,16 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		if (e.getSource().equals(buttonFilterMedianOrig)) {
 			// tbd
 		} else if (e.getSource().equals(buttonFilterMedian)) {
-			MedianFilter median = new MedianFilter();
-			// median.SetKernelSize(3, 3, 3); selbst implementieren und
-			// verwenden ;)
-			applyFilter(median);
+//			MedianFilter median = new MedianFilter();
+//			median.SetKernelSize(3, 3, 1); 
+//			// set slice
+//			applyFilter(median);
+			
+			ThresholdFilter threshold = new ThresholdFilter();
+			threshold.setUpperThreshold(1000.0);
+			threshold.setLowerThreshold(500.0);
+			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(threshold);
 		}
 	}
 
