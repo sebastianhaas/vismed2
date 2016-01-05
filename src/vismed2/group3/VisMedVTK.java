@@ -18,10 +18,9 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 import vismed2.group3.filters.MedianFilter;
+import vismed2.group3.filters.VtkJavaFilter;
 import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
-import vtk.vtkImageMedian3D;
-import vtk.vtkImageSpatialAlgorithm;
 import vtk.vtkNativeLibrary;
 
 public class VisMedVTK extends JPanel implements ChangeListener, ActionListener {
@@ -73,7 +72,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		panel2 = new ImageViewerPanel(currentImageData);
 
 		JPanel content = new JPanel(new MigLayout("fill, debug"));
-		
+
 		// Prepare controls
 		JPanel controlsPanel = new JPanel(new MigLayout());
 
@@ -105,7 +104,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		content.add(panel1, "grow, wrap");
 		content.add(panel2, "grow");
 		content.add(controlsPanel, "grow, wrap");
-		
+
 		add(content, BorderLayout.NORTH);
 		statusBar = new StatusBar();
 		add(statusBar, BorderLayout.SOUTH);
@@ -158,31 +157,29 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource().equals(buttonFilterMedianOrig)) {
-			vtkImageMedian3D median = new vtkImageMedian3D();
-			median.SetKernelSize(3, 3, 3);
-			applyFilter(median);
+			// tbd
 		} else if (e.getSource().equals(buttonFilterMedian)) {
 			MedianFilter median = new MedianFilter();
-			//median.SetKernelSize(3, 3, 3); selbst implementieren und verwenden ;)
+			// median.SetKernelSize(3, 3, 3); selbst implementieren und
+			// verwenden ;)
 			applyFilter(median);
 		}
 	}
 
-	public void applyFilter(final vtkImageSpatialAlgorithm filter) {
+	public void applyFilter(final VtkJavaFilter filter) {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		statusBar.setMessage("Applying filter " + filter.GetClassName()+ "...");
-		SwingWorker<vtkImageSpatialAlgorithm, Void> worker = new SwingWorker<vtkImageSpatialAlgorithm, Void>() {
-			
-			private vtkImageSpatialAlgorithm algorithm;
-			
+		statusBar.setMessage("Applying filter " + filter.getFilterName() + "...");
+		SwingWorker<VtkJavaFilter, Void> worker = new SwingWorker<VtkJavaFilter, Void>() {
+
+			private VtkJavaFilter algorithm;
+
 			@Override
-			public vtkImageSpatialAlgorithm doInBackground() {
+			public VtkJavaFilter doInBackground() {
 				algorithm = filter;
-				algorithm.SetInputData(currentImageData);
-				algorithm.Update();
+				algorithm.applyFilter(currentImageData);
 				return algorithm;
 			}
-			
+
 			@Override
 			public void done() {
 				setCursor(Cursor.getDefaultCursor());
