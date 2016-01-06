@@ -14,6 +14,9 @@ public class MedianFilter implements VtkJavaFilter {
 	private int filter_height;
 	private int filter_width;
 	private int filter_depth;
+	private int sliceYZ = 0;
+	private int sliceXZ = 0;
+	private int sliceAlong_Z = 0;
 
 	public MedianFilter() {
 		out = new vtkImageData();
@@ -63,29 +66,126 @@ public class MedianFilter implements VtkJavaFilter {
 		double pixelValue;
 
 		// iterate through the image/ through all slices
-		for (int slice = filter_depth; slice < dims[2] - filter_depth; slice++) {
-			for (int width = filter_width; width < dims[1] - filter_width; width++) {
-				for (int height = filter_height; height < dims[0] - filter_height; height++) {
+		/*
+		 * for (int slice = filter_depth; slice < dims[2] - filter_depth;
+		 * slice++) { for (int width = filter_width; width < dims[1] -
+		 * filter_width; width++) { for (int height = filter_height; height <
+		 * dims[0] - filter_height; height++) {
+		 * 
+		 * // fill values into kernel int count = 0; for (int y = slice -
+		 * filter_depth; y < slice; y++) { for (int x = width - filter_width; x
+		 * < width; x++) { for (int z = height - filter_height; z < height; z++)
+		 * { pixelValue = imgData.GetScalarComponentAsDouble(z, x, y, 0);
+		 * kernel[count++] = pixelValue; } } } // get medial by sorting the list
+		 * of values and taking the // one in the middle Arrays.sort(kernel);
+		 * pixelValue = kernel[kernel.length / 2 + 1];
+		 * 
+		 * out.SetScalarComponentFromDouble(height, width, slice, 0, pixelValue
+		 * * -1); } } }
+		 */
 
-					// fill values into kernel
-					int count = 0;
-					for (int y = slice - filter_depth; y < slice; y++) {
-						for (int x = width - filter_width; x < width; x++) {
-							for (int z = height - filter_height; z < height; z++) {
+		// do filter for the pannel0 YZ
+		for (int width = 0; width < dims[1]; width++) {
+			for (int height = 0; height < dims[0]; height++) {
+
+				// fill values into kernel
+				int count = 0;
+				for (int y = sliceYZ - filter_depth; y < sliceYZ; y++) {
+					for (int x = width - filter_width; x < width; x++) {
+						for (int z = height - filter_height; z < height; z++) {
+							// clipping
+							if (y < 0) { // kernel < first Slice
+								pixelValue = imgData.GetScalarComponentAsDouble(z, x, 0, 0);
+							} else if (y > dims[1]) { // kernel > last Slice
+								int lastSlice = sliceYZ - (sliceYZ - dims[2]);
+								pixelValue = imgData.GetScalarComponentAsDouble(z, x, lastSlice, 0);
+							} else {
 								pixelValue = imgData.GetScalarComponentAsDouble(z, x, y, 0);
-								kernel[count++] = pixelValue;
 							}
+							kernel[count++] = pixelValue;
 						}
 					}
-					// get medial by sorting the list of values and taking the
-					// one in the middle
-					Arrays.sort(kernel);
-					pixelValue = kernel[kernel.length / 2 + 1];
-
-					out.SetScalarComponentFromDouble(height, width, slice, 0, pixelValue * -1);
 				}
+				// get medial by sorting the list of values and taking the
+				// one in the middle
+				Arrays.sort(kernel);
+				pixelValue = kernel[kernel.length / 2];
+
+				out.SetScalarComponentFromDouble(height, width, sliceYZ, 0, pixelValue);
 			}
 		}
+		
+		// do filter for the pannel1 XZ
+		for (int width = 0; width < dims[2]; width++) {
+			for (int height = 0; height < dims[0]; height++) {
+				pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceXZ, 0);
+
+				// fill values into kernel
+				int count = 0;
+				for (int y = sliceXZ - filter_depth; y < sliceXZ; y++) {
+					for (int x = width - filter_width; x < width; x++) {
+						for (int z = height - filter_height; z < height; z++) {
+							// clipping
+							if (y < 0) { // kernel < first Slice
+								pixelValue = imgData.GetScalarComponentAsDouble(z, 0, x, 0);
+							} else if (y > dims[1]) { // kernel > last Slice
+								int lastSlice = sliceXZ - (sliceXZ - dims[1]);
+								pixelValue = imgData.GetScalarComponentAsDouble(z, lastSlice, x, 0);
+							} else {
+								pixelValue = imgData.GetScalarComponentAsDouble(z, y, x, 0);
+							}
+							kernel[count++] = pixelValue;
+						}
+					}
+				}
+				// get medial by sorting the list of values and taking the one
+				// in the middle
+				Arrays.sort(kernel);
+				pixelValue = kernel[kernel.length / 2];
+
+				out.SetScalarComponentFromDouble(height, sliceXZ, width, 0, pixelValue);
+			}
+		} 
+		
+		// do filter for the pannel1 YX
+		for (int width = 0; width < dims[1]; width++) {
+			for (int height = 0; height < dims[0]; height++) {
+				pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_Z, 0);
+
+				// fill values into kernel
+				int count = 0;
+				for (int y = sliceAlong_Z - filter_depth; y < sliceAlong_Z; y++) {
+					for (int x = width - filter_width; x < width; x++) {
+						for (int z = height - filter_height; z < height; z++) {
+							// clipping
+							if (y < 0) { // kernel < first Slice
+								pixelValue = imgData.GetScalarComponentAsDouble(y, z, 0, 0);
+							} else if (y > dims[1]) { // kernel > last Slice
+								int lastSlice = sliceAlong_Z - (sliceAlong_Z - dims[2]);
+								pixelValue = imgData.GetScalarComponentAsDouble(y, z, lastSlice, 0);
+							} else {
+								pixelValue = imgData.GetScalarComponentAsDouble(y, z, x, 0);
+								//					 GetScalarComponentAsDouble(sliceYX, height, width, 0);
+							}
+							kernel[count++] = pixelValue;
+						}
+					}
+				}
+				// get median by sorting the list of values and taking the one
+				// in the middle
+				Arrays.sort(kernel);
+				pixelValue = kernel[kernel.length / 2];
+
+				out.SetScalarComponentFromDouble(sliceAlong_Z, height, width, 0, pixelValue);
+			}
+		}
+
+	}
+
+	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
+		this.sliceYZ = sliceYZ;
+		this.sliceXZ = sliceXZ;
+		this.sliceAlong_Z = sliceYX;
 	}
 
 	@Override

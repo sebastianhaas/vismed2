@@ -160,16 +160,16 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		if (e.getSource().equals(buttonFilterMedianOrig)) {
 			// tbd
 		} else if (e.getSource().equals(buttonFilterMedian)) {
-//			MedianFilter median = new MedianFilter();
-//			median.SetKernelSize(3, 3, 1); 
-//			// set slice
-//			applyFilter(median);
+			MedianFilter median = new MedianFilter();
+			median.SetKernelSize(3, 3, 3); 
+			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(median);
 			
-			ThresholdFilter threshold = new ThresholdFilter();
-			threshold.setUpperThreshold(1000.0);
-			threshold.setLowerThreshold(500.0);
-			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-			applyFilter(threshold);
+//			ThresholdFilter threshold = new ThresholdFilter();
+//			threshold.setUpperThreshold(1000.0);
+//			threshold.setLowerThreshold(500.0);
+//			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+//			applyFilter(threshold);
 		}
 	}
 
