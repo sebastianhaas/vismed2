@@ -40,6 +40,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private int currentSlice2 = 0;
 	private JButton buttonFilterThreshold;
 	private JButton buttonFilterMedian;
+	private JButton buttonFilterGradient;
 	private StatusBar statusBar;
 
 	// -----------------------------------------------------------------
@@ -98,8 +99,11 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		filterPanel.add(buttonFilterThreshold, "wrap");
 		buttonFilterMedian = new JButton("Median Filter (Own)");
 		buttonFilterMedian.addActionListener(this);
-		filterPanel.add(buttonFilterMedian);
-
+		filterPanel.add(buttonFilterMedian); 
+		buttonFilterGradient = new JButton("Gradient Filter (Own)");
+		buttonFilterGradient.addActionListener(this);
+		filterPanel.add(buttonFilterGradient); 
+		
 		controlsPanel.add(sliderPanel, "grow, wrap");
 		controlsPanel.add(filterPanel, "grow");
 
@@ -167,12 +171,12 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(threshold);
 		} else if (e.getSource().equals(buttonFilterMedian)) {
-//			MedianFilter median = new MedianFilter();
-//			median.SetKernelSize(3, 3, 1); 
-//			median.setAllSlices(true);
-//			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-//			applyFilter(median);
-			
+			MedianFilter median = new MedianFilter();
+			median.SetKernelSize(3, 3, 1); 
+			median.setAllSlices(false);
+			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(median);
+		} else if (e.getSource().equals(buttonFilterGradient)) {
 			GradientFilter gradient = new GradientFilter();
 			gradient.setAllSlices(false);
 			gradient.setFilter("Roberts");
