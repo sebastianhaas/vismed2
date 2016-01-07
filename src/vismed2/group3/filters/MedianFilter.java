@@ -14,8 +14,8 @@ public class MedianFilter implements VtkJavaFilter {
 	private int filter_height;
 	private int filter_width;
 	private int filter_depth;
-	private int sliceYZ = 0;
-	private int sliceXZ = 0;
+	private int sliceAlong_X = 0;
+	private int sliceAlong_Y = 0;
 	private int sliceAlong_Z = 0;
 	private boolean doAllSlices = false;
 
@@ -29,9 +29,6 @@ public class MedianFilter implements VtkJavaFilter {
 		this.filter_depth = depth;
 	}
 
-	/**
-	 * The kernel- size has to be an uneven number!
-	 */
 	@Override
 	public void applyFilter(vtkImageData imgData) {
 		// Prepare output data
@@ -98,14 +95,14 @@ public class MedianFilter implements VtkJavaFilter {
 
 					// fill values into kernel
 					int count = 0;
-					for (int y = sliceYZ - filter_depth; y < sliceYZ; y++) {
+					for (int y = sliceAlong_X - filter_depth; y < sliceAlong_X; y++) {
 						for (int x = width - filter_width; x < width; x++) {
 							for (int z = height - filter_height; z < height; z++) {
 								// clipping
 								if (y < 0) { // kernel < first Slice
 									pixelValue = imgData.GetScalarComponentAsDouble(z, x, 0, 0);
 								} else if (y > dims[1]) { // kernel > last Slice
-									int lastSlice = sliceYZ - (sliceYZ - dims[2]);
+									int lastSlice = sliceAlong_X - (sliceAlong_X - dims[2]);
 									pixelValue = imgData.GetScalarComponentAsDouble(z, x, lastSlice, 0);
 								} else {
 									pixelValue = imgData.GetScalarComponentAsDouble(z, x, y, 0);
@@ -122,25 +119,25 @@ public class MedianFilter implements VtkJavaFilter {
 					} else { // uneven kernel size
 						pixelValue = kernel[kernel.length / 2];
 					}
-					out.SetScalarComponentFromDouble(height, width, sliceYZ, 0, pixelValue);
+					out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
 				}
 			}
 
 			// do filter for the pannel1 XZ
 			for (int width = 0; width < dims[2]; width++) {
 				for (int height = 0; height < dims[0]; height++) {
-					pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceXZ, 0);
+					pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_Y, 0);
 
 					// fill values into kernel
 					int count = 0;
-					for (int y = sliceXZ - filter_depth; y < sliceXZ; y++) {
+					for (int y = sliceAlong_Y - filter_depth; y < sliceAlong_Y; y++) {
 						for (int x = width - filter_width; x < width; x++) {
 							for (int z = height - filter_height; z < height; z++) {
 								// clipping
 								if (y < 0) { // kernel < first Slice
 									pixelValue = imgData.GetScalarComponentAsDouble(z, 0, x, 0);
 								} else if (y > dims[1]) { // kernel > last Slice
-									int lastSlice = sliceXZ - (sliceXZ - dims[1]);
+									int lastSlice = sliceAlong_Y - (sliceAlong_Y - dims[1]);
 									pixelValue = imgData.GetScalarComponentAsDouble(z, lastSlice, x, 0);
 								} else {
 									pixelValue = imgData.GetScalarComponentAsDouble(z, y, x, 0);
@@ -159,7 +156,7 @@ public class MedianFilter implements VtkJavaFilter {
 						pixelValue = kernel[kernel.length / 2];
 					}
 
-					out.SetScalarComponentFromDouble(height, sliceXZ, width, 0, pixelValue);
+					out.SetScalarComponentFromDouble(height, sliceAlong_Y, width, 0, pixelValue);
 				}
 			}
 
@@ -210,8 +207,8 @@ public class MedianFilter implements VtkJavaFilter {
 	}
 
 	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
-		this.sliceYZ = sliceYZ;
-		this.sliceXZ = sliceXZ;
+		this.sliceAlong_X = sliceYZ;
+		this.sliceAlong_Y = sliceXZ;
 		this.sliceAlong_Z = sliceYX;
 	}
 

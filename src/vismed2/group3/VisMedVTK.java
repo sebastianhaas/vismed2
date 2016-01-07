@@ -17,6 +17,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
+import vismed2.group3.filters.GradientFilter;
 import vismed2.group3.filters.MedianFilter;
 import vismed2.group3.filters.ThresholdFilter;
 import vismed2.group3.filters.VtkJavaFilter;
@@ -37,7 +38,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private int currentSlice0 = 0;
 	private int currentSlice1 = 0;
 	private int currentSlice2 = 0;
-	private JButton buttonFilterMedianOrig;
+	private JButton buttonFilterThreshold;
 	private JButton buttonFilterMedian;
 	private StatusBar statusBar;
 
@@ -61,6 +62,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		// Get DICOM image data
 		dicomReader = new vtkDICOMImageReader();
 		File directory = new File("data/Dentascan-0.75-H60s-3");
+		//File directory = new File("data/SCOUT_3-PLANE_RT.-2");
 		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
 																	// path
 																	// causing
@@ -91,9 +93,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		JPanel filterPanel = new JPanel(new MigLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
-		buttonFilterMedianOrig = new JButton("Median Filter (VTK)");
-		buttonFilterMedianOrig.addActionListener(this);
-		filterPanel.add(buttonFilterMedianOrig, "wrap");
+		buttonFilterThreshold = new JButton("Threshold Filter (Own)");
+		buttonFilterThreshold.addActionListener(this);
+		filterPanel.add(buttonFilterThreshold, "wrap");
 		buttonFilterMedian = new JButton("Median Filter (Own)");
 		buttonFilterMedian.addActionListener(this);
 		filterPanel.add(buttonFilterMedian);
@@ -157,19 +159,25 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource().equals(buttonFilterMedianOrig)) {
-			// tbd
+		if (e.getSource().equals(buttonFilterThreshold)) {
+			ThresholdFilter threshold = new ThresholdFilter();
+			threshold.setAllSlices(false);
+			threshold.setUpperThreshold(1000.0);
+			threshold.setLowerThreshold(500.0);
+			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(threshold);
 		} else if (e.getSource().equals(buttonFilterMedian)) {
-			MedianFilter median = new MedianFilter();
-			median.SetKernelSize(3, 3, 3); 
-			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-			applyFilter(median);
+//			MedianFilter median = new MedianFilter();
+//			median.SetKernelSize(3, 3, 1); 
+//			median.setAllSlices(true);
+//			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+//			applyFilter(median);
 			
-//			ThresholdFilter threshold = new ThresholdFilter();
-//			threshold.setUpperThreshold(1000.0);
-//			threshold.setLowerThreshold(500.0);
-//			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-//			applyFilter(threshold);
+			GradientFilter gradient = new GradientFilter();
+			gradient.setAllSlices(false);
+			gradient.setFilter("Roberts");
+			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(gradient);
 		}
 	}
 
