@@ -11,16 +11,18 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
+import vismed2.group3.dicom.DicomExporter;
+import vismed2.group3.filters.GradientFilter;
 import vismed2.group3.filters.MedianFilter;
 import vismed2.group3.filters.ThresholdFilter;
 import vismed2.group3.filters.VtkJavaFilter;
-import vismed2.group3.filters.GradientFilter;
 import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
@@ -43,6 +45,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private JButton buttonFilterGradient;
 	private JButton buttonExport;
 	private StatusBar statusBar;
+	private ProgressMonitor progressMonitor;
 
 	// -----------------------------------------------------------------
 	// Load VTK library and print which library was not properly loaded
@@ -119,7 +122,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		statusBar = new StatusBar();
 		add(statusBar, BorderLayout.SOUTH);
 
-		Runnable r1 = new Runnable() {
+		Runnable initViewsDelayRunnable = new Runnable() {
 			public void run() {
 				try {
 					Thread.sleep(1500);
@@ -133,8 +136,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 				}
 			}
 		};
-		Thread thr1 = new Thread(r1);
-		thr1.start();
+		Thread initViewsDelayThread = new Thread(initViewsDelayRunnable);
+		initViewsDelayThread.start();
 	}
 
 	public static void main(String s[]) {
@@ -174,7 +177,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			applyFilter(threshold);
 		} else if (e.getSource().equals(buttonFilterMedian)) {
 			MedianFilter median = new MedianFilter();
-			median.SetKernelSize(3, 3, 3); 
+			median.SetKernelSize(3, 3, 3);
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
 		} else if (e.getSource().equals(buttonFilterGradient)) {
@@ -184,11 +187,11 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(gradient);
 		} else if (e.getSource().equals(buttonExport)) {
-			
+			exportCurrentImage();
 		}
 	}
 
-	public void applyFilter(final VtkJavaFilter filter) {
+	private void applyFilter(final VtkJavaFilter filter) {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		statusBar.setMessage("Applying filter " + filter.getFilterName() + "...");
 		SwingWorker<VtkJavaFilter, Void> worker = new SwingWorker<VtkJavaFilter, Void>() {
@@ -228,5 +231,46 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			}
 		};
 		worker.execute();
+	}
+
+	private void exportCurrentImage() {
+		class ExportTask extends SwingWorker<Void, Void>implements ChangeListener {
+			@Override
+			public Void doInBackground() {
+				DicomExporter exporter = new DicomExporter();
+				exporter.setChangeListener(this);
+				exporter.exportImageData(currentImageData, "data/output/test");
+				return null;
+			}
+
+			@Override
+			public void done() {
+				buttonExport.setEnabled(true);
+			}
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int progress = (Integer) e.getSource();
+				progressMonitor.setProgress(progress);
+				String message = String.format("Completed %d of 166 slices.\n", progress);
+				progressMonitor.setNote(message);
+				if (progressMonitor.isCanceled() || isDone()) {
+					if (progressMonitor.isCanceled()) {
+						cancel(true);
+						System.out.println("Task canceled.\n");
+					} else {
+						System.out.println("Task completed.\n");
+					}
+					buttonExport.setEnabled(true);
+				}
+			}
+		}
+
+		progressMonitor = new ProgressMonitor(this, "Exporting current image to DICOM", "Completed 0 of 166 slices.\n",
+				0, 166);
+		progressMonitor.setProgress(0);
+		buttonExport.setEnabled(false);
+		ExportTask task = new ExportTask();
+		task.execute();
 	}
 }

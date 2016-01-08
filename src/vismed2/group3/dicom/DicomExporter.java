@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
@@ -11,93 +14,13 @@ import org.dcm4che3.data.VR;
 import org.dcm4che3.io.DicomOutputStream;
 import org.dcm4che3.util.UIDUtils;
 
-import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
-import vtk.vtkNativeLibrary;
 
 public class DicomExporter {
 
 	private Attributes dataset;
-
-	// -----------------------------------------------------------------
-	// Load VTK library and print which library was not properly loaded
-	static {
-		if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
-			for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
-				if (!lib.IsLoaded()) {
-					System.out.println(lib.GetLibraryName() + " not loaded");
-				}
-			}
-		}
-		vtkNativeLibrary.DisableOutputWindow(null);
-	}
-
-	// -----------------------------------------------------------------
-
-	public DicomExporter(vtkImageData imgData) {
-		try {
-			// Create and fill attributes for modules
-			dataset = createDataset();
-			setPatientModule();
-			setGeneralStudyModule();
-			setGeneralSeriesModule();
-			setSCEquipmentModule();
-
-			int[] dims = imgData.GetDimensions();
-			for (int z = 0; z < dims[2]; z++) {
-				
-				// Append instance-specific attributes and create file meta information
-				String instanceId = String.format("%04d", z);
-				setGeneralImageModule(instanceId);
-				setImagePixelModule(imgData);
-				Attributes fileMetaInformation = dataset.createFileMetaInformation(UID.ExplicitVRLittleEndian);
-				
-				// Open file stream
-				DicomOutputStream out = new DicomOutputStream(new File("data/output/test-" + instanceId + ".dcm"));
-				out.writeDataset(fileMetaInformation, dataset);
-
-				// Prepare pixel data buffer and normalizing
-				int sliceSize = (dims[0] * dims[1] * Short.SIZE) / 8;
-				out.writeHeader(Tag.PixelData, VR.OW, sliceSize);
-				double[] range = imgData.GetScalarRange();
-				short vtkOffset = (short) Math.abs(range[0]);
-				byte[] buffer = new byte[sliceSize];
-				int i = 0;
-
-				// Iterate over the image and store values in the buffer
-				for (int y = dims[1] - 1; y >= 0; y--) {
-					for (int x = 0; x < dims[0]; x++) {
-						short val = (short) (imgData.GetScalarComponentAsDouble(x, y, z, 0) + vtkOffset);
-						buffer[i] = (byte) (val & 0xff);
-						buffer[i + 1] = (byte) ((val >> 8) & 0xff);
-						i = i + 2;
-					}
-				}
-
-				// Write buffer and close file stream
-				out.write(buffer, 0, sliceSize);
-				out.finish();
-				out.close();
-				
-				System.out.println(String.format("Wrote slice %d/%d to DICOM file.", z+1, dims[2]));
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static void main(String[] args) {
-		// Get DICOM image data
-		vtkDICOMImageReader dicomReader = new vtkDICOMImageReader();
-		File directory = new File("data/Dentascan-0.75-H60s-3");
-		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
-																	// path
-																	// causing
-																	// troubles
-		dicomReader.Update();
-		new DicomExporter(dicomReader.GetOutput());
-	}
+	private ChangeListener listener;
+	private int numInstances;
 
 	private Attributes createDataset() {
 		Attributes ds = new Attributes();
@@ -183,5 +106,75 @@ public class DicomExporter {
 		dataset.setDate(Tag.ContentDate, VR.DA, now);
 		dataset.setDate(Tag.ContentTime, VR.DA, now);
 		dataset.setString(Tag.SOPInstanceUID, VR.UI, UIDUtils.createUID());
+	}
+
+	public void setChangeListener(ChangeListener changeListener) {
+		listener = changeListener;
+	}
+
+	public void removeChangeListener() {
+		listener = null;
+	}
+
+	public int getNumberOfInstancesToExport() {
+		return numInstances;
+	}
+
+	public void exportImageData(vtkImageData imageData, String filePathAndBaseName) {
+		try {
+			// Create and fill attributes for modules
+			dataset = createDataset();
+			setPatientModule();
+			setGeneralStudyModule();
+			setGeneralSeriesModule();
+			setSCEquipmentModule();
+
+			int[] dims = imageData.GetDimensions();
+			for (int z = 0; z < dims[2]; z++) {
+
+				// Append instance-specific attributes and create file meta
+				// information
+				String instanceId = String.format("%04d", z);
+				setGeneralImageModule(instanceId);
+				setImagePixelModule(imageData);
+				Attributes fileMetaInformation = dataset.createFileMetaInformation(UID.ExplicitVRLittleEndian);
+
+				// Open file stream
+				DicomOutputStream out = new DicomOutputStream(
+						new File(filePathAndBaseName + "-" + instanceId + ".dcm"));
+				out.writeDataset(fileMetaInformation, dataset);
+
+				// Prepare pixel data buffer and normalizing
+				int sliceSize = (dims[0] * dims[1] * Short.SIZE) / 8;
+				out.writeHeader(Tag.PixelData, VR.OW, sliceSize);
+				double[] range = imageData.GetScalarRange();
+				short vtkOffset = (short) Math.abs(range[0]);
+				byte[] buffer = new byte[sliceSize];
+				int i = 0;
+
+				// Iterate over the image and store values in the buffer
+				for (int y = dims[1] - 1; y >= 0; y--) {
+					for (int x = 0; x < dims[0]; x++) {
+						short val = (short) (imageData.GetScalarComponentAsDouble(x, y, z, 0) + vtkOffset);
+						buffer[i] = (byte) (val & 0xff);
+						buffer[i + 1] = (byte) ((val >> 8) & 0xff);
+						i = i + 2;
+					}
+				}
+
+				// Write buffer and close file stream
+				out.write(buffer, 0, sliceSize);
+				out.finish();
+				out.close();
+
+				System.out.println(String.format("Wrote slice %d/%d to DICOM file.", z + 1, dims[2]));
+				if (listener != null) {
+					listener.stateChanged(new ChangeEvent(z + 1));
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
