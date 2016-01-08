@@ -37,8 +37,10 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private int currentSlice0 = 0;
 	private int currentSlice1 = 0;
 	private int currentSlice2 = 0;
-	private JButton buttonFilterMedianOrig;
+	private JButton buttonFilterTreshold;
 	private JButton buttonFilterMedian;
+	private JButton buttonFilterGradient;
+	private JButton buttonExport;
 	private StatusBar statusBar;
 
 	// -----------------------------------------------------------------
@@ -91,15 +93,21 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		JPanel filterPanel = new JPanel(new MigLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
-		buttonFilterMedianOrig = new JButton("Median Filter (VTK)");
-		buttonFilterMedianOrig.addActionListener(this);
-		filterPanel.add(buttonFilterMedianOrig, "wrap");
-		buttonFilterMedian = new JButton("Median Filter (Own)");
+		buttonFilterTreshold = new JButton("Treshold Filter");
+		buttonFilterTreshold.addActionListener(this);
+		filterPanel.add(buttonFilterTreshold);
+		buttonFilterMedian = new JButton("Median Filter");
 		buttonFilterMedian.addActionListener(this);
-		filterPanel.add(buttonFilterMedian);
+		filterPanel.add(buttonFilterMedian, "wrap");
+		buttonFilterGradient = new JButton("Gradient Filter");
+		buttonFilterGradient.addActionListener(this);
+		filterPanel.add(buttonFilterGradient);
+		buttonExport = new JButton("Export as DICOM");
+		buttonExport.addActionListener(this);
+		filterPanel.add(buttonExport);
 
 		controlsPanel.add(sliderPanel, "grow, wrap");
-		controlsPanel.add(filterPanel, "grow");
+		controlsPanel.add(filterPanel);
 
 		content.add(panel0, "grow");
 		content.add(panel1, "grow, wrap");
@@ -157,19 +165,24 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource().equals(buttonFilterMedianOrig)) {
-			// tbd
+		if (e.getSource().equals(buttonFilterTreshold)) {
+			ThresholdFilter threshold = new ThresholdFilter();
+			threshold.setUpperThreshold(1000.0);
+			threshold.setLowerThreshold(500.0);
+			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(threshold);
 		} else if (e.getSource().equals(buttonFilterMedian)) {
 			MedianFilter median = new MedianFilter();
 			median.SetKernelSize(3, 3, 3); 
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
+		} else if (e.getSource().equals(buttonFilterGradient)) {
+//			GradientFilter gradient = new GradientFilter();
+//			gradient.setKernelSize(3, 3, 3); 
+//			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+//			applyFilter(gradient);
+		} else if (e.getSource().equals(buttonExport)) {
 			
-//			ThresholdFilter threshold = new ThresholdFilter();
-//			threshold.setUpperThreshold(1000.0);
-//			threshold.setLowerThreshold(500.0);
-//			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-//			applyFilter(threshold);
 		}
 	}
 
