@@ -20,6 +20,7 @@ import net.miginfocom.swing.MigLayout;
 import vismed2.group3.filters.MedianFilter;
 import vismed2.group3.filters.ThresholdFilter;
 import vismed2.group3.filters.VtkJavaFilter;
+import vismed2.group3.filters.GradientFilter;
 import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
@@ -177,10 +178,11 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
 		} else if (e.getSource().equals(buttonFilterGradient)) {
-//			GradientFilter gradient = new GradientFilter();
-//			gradient.setKernelSize(3, 3, 3); 
-//			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-//			applyFilter(gradient);
+			GradientFilter gradient = new GradientFilter();
+			gradient.setAllSlices(false);
+			gradient.setFilter("Roberts");
+			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(gradient);
 		} else if (e.getSource().equals(buttonExport)) {
 			
 		}
