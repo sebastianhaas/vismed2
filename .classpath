@@ -12,5 +12,13 @@
 			<attribute name="javadoc_location" value="jar:file:/Users/sebastian/Documents/Development/vismed2/lib/miglayout-4.0-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/vismed2/lib/dcm4che-core-3.3.7.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/vismed2/lib/dcm4che-3.3.7-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/vismed2/lib/slf4j-api-1.7.5.jar"/>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/vismed2/lib/slf4j-log4j12-1.7.5.jar"/>
+	<classpathentry kind="lib" path="/Users/sebastian/Documents/Development/vismed2/lib/log4j-1.2.17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
