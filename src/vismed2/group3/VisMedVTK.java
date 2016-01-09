@@ -31,6 +31,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private static final long serialVersionUID = 1L;
 	private vtkDICOMImageReader dicomReader;
 	private vtkImageData currentImageData;
+	vtkImageData currentImageData_backup;
 	private ImageViewerPanel panel0;
 	private ImageViewerPanel panel1;
 	private ImageViewerPanel panel2;
@@ -46,6 +47,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private JButton buttonExport;
 	private StatusBar statusBar;
 	private ProgressMonitor progressMonitor;
+	private boolean crosshairsFlag = false;
 
 	// -----------------------------------------------------------------
 	// Load VTK library and print which library was not properly loaded
@@ -74,6 +76,12 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		dicomReader.Update();
 		currentImageData = dicomReader.GetOutput();
 
+		currentImageData_backup = new vtkImageData();
+		currentImageData_backup.Initialize();
+		currentImageData_backup.CopyStructure(currentImageData);
+		currentImageData_backup.CopyAttributes(currentImageData);
+		currentImageData_backup.DeepCopy(currentImageData);
+		
 		panel0 = new ImageViewerPanel(currentImageData);
 		panel1 = new ImageViewerPanel(currentImageData);
 		panel2 = new ImageViewerPanel(currentImageData);
@@ -157,12 +165,15 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource().equals(sliceSlider0)) {
 			currentSlice0 = sliceSlider0.getValue();
+			if (crosshairsFlag) { panel0.setInputData(currentImageData_backup); }
 			panel0.setSlice(currentSlice0);
 		} else if (e.getSource().equals(sliceSlider1)) {
 			currentSlice1 = sliceSlider1.getValue();
+			if (crosshairsFlag) { panel1.setInputData(currentImageData_backup); } 
 			panel1.setSlice(currentSlice1);
 		} else if (e.getSource().equals(sliceSlider2)) {
 			currentSlice2 = sliceSlider2.getValue();
+			if (crosshairsFlag) { panel2.setInputData(currentImageData_backup); } 
 			panel2.setSlice(currentSlice2);
 		}
 	}
@@ -171,18 +182,20 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource().equals(buttonFilterTreshold)) {
 			ThresholdFilter threshold = new ThresholdFilter();
+			this.crosshairsFlag = threshold.setAllSlices(false);
 			threshold.setUpperThreshold(1000.0);
 			threshold.setLowerThreshold(500.0);
 			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(threshold);
 		} else if (e.getSource().equals(buttonFilterMedian)) {
 			MedianFilter median = new MedianFilter();
-			median.SetKernelSize(3, 3, 3);
+			median.SetKernelSize(3, 3, 3); 
+			this.crosshairsFlag = median.setAllSlices(false);
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
 		} else if (e.getSource().equals(buttonFilterGradient)) {
 			GradientFilter gradient = new GradientFilter();
-			gradient.setAllSlices(false);
+			this.crosshairsFlag = gradient.setAllSlices(false);
 			gradient.setFilter("Roberts");
 			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(gradient);
