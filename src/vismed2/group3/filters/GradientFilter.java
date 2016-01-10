@@ -36,8 +36,10 @@ public class GradientFilter implements VtkJavaFilter {
 	public void applyFilter(vtkImageData imgData) {
 		if (this.filterName.equals("Roberts")) {
 			doRoberts(imgData);
-		}
-		// TODO other Gradient Filters
+		} else if (filterName.equals("Sobel")) {
+			doSobel(imgData);
+		} else System.err.println("Unknown Gradient Algorithm!");
+		
 	}
 
 	/**
@@ -114,8 +116,107 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
+	 * 1  0 -1  |  1  2  1
+	 * 2  0 -2  |  0  0  0
+	 * 1  0 -1  | -1 -2 -1
+	 */
+	public void doSobel(vtkImageData imgData) {
+		// Prepare output data
+				int[] dims = imgData.GetDimensions();
+				out.Initialize();
+				out.CopyStructure(imgData);
+				out.CopyAttributes(imgData);
+				out.DeepCopy(imgData);
+				
+				double[] pixelValue1 = new double[12];
+				double pixelValue;
+				
+				for (int slice = 0; slice < dims[2] - 3; slice++) {
+					for (int width = 0; width < dims[1] - 3; width++) {
+						for (int height = 0; height < dims[0] - 3; height++) {
+							if (slice == sliceAlong_X) { // along X
+								int value = 0;
+								// Kernel 1
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 1, width, sliceAlong_X, 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, width, sliceAlong_X, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width + 2, sliceAlong_X, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 1, width + 2, sliceAlong_X, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, width + 2, sliceAlong_X, 0) * (-1);
+								
+								// Kernel 2
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width + 1, sliceAlong_X, 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width + 2, sliceAlong_X, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, width, sliceAlong_X, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2 + 1, width + 1, sliceAlong_X, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2 + 2, width + 2, sliceAlong_X, 0) * (-1);
+								
+								double sumValues = 0;
+								for (int i = 0; i < pixelValue1.length; i++) {
+									sumValues += pixelValue1[i];
+								}
+								pixelValue = (sumValues) / 18;
+								out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
+							}
+							if (width == sliceAlong_Y) {
+								int value = 0;
+								// Kernel 1
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice + 2, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 1, sliceAlong_Y, slice + 2, 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice + 2, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice + 1, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice + 2, 0) * (-1);
+								
+								// Kernel 2
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice + 1, 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice + 2, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice + 1, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 2, sliceAlong_Y, slice + 2, 0) * (-1);
+								
+								double sumValues = 0;
+								for (int i = 0; i < pixelValue1.length; i++) {
+									sumValues += pixelValue1[i];
+								}
+								pixelValue = (sumValues) / 18;
+								out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
+							}
+							if (height == sliceAlong_Z) {
+								int value = 0;
+								// Kernel 1
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice+ 1, 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice + 2, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 2, slice, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 2, slice + 1, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 2, slice + 2, 0) * (-1);
+								
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 1, slice , 0) * 2;
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 2, slice, 0);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice + 2, 0) * (-1);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 1, slice + 2, 0) * (-2);
+								pixelValue1[value++] = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 2, slice + 2, 0) * (-1);
+
+								double sumValues = 0;
+								for (int i = 0; i < pixelValue1.length; i++) {
+									sumValues += pixelValue1[i];
+								}
+								pixelValue = (sumValues) / 18;
+								out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
+							}
+						}
+					}
+				}
+	}
+	
+	/**
 	 * filterName hast to be one of the following: 
 	 * 1) Roberts
+	 * 2) Sobl
 	 * @param filter
 	 */
 	public void setFilter(String filterName) {

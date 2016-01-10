@@ -8,6 +8,7 @@ import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -48,7 +49,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private StatusBar statusBar;
 	private ProgressMonitor progressMonitor;
 	private boolean crosshairsFlag = false;
-
+	private JComboBox comboBoxFilterGradient;
+	String[] gradientFilters = { "Roberts", "Sobel" };
+	
 	// -----------------------------------------------------------------
 	// Load VTK library and print which library was not properly loaded
 	static {
@@ -68,7 +71,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		// Get DICOM image data
 		dicomReader = new vtkDICOMImageReader();
-		File directory = new File("data/Dentascan-0.75-H60s-3");
+		//File directory = new File("data/Dentascan-0.75-H60s-3");
+		File directory = new File("data/Bassin");
 		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
 																	// path
 																	// causing
@@ -111,13 +115,17 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		buttonFilterMedian = new JButton("Median Filter");
 		buttonFilterMedian.addActionListener(this);
 		filterPanel.add(buttonFilterMedian, "wrap");
-		buttonFilterGradient = new JButton("Gradient Filter");
-		buttonFilterGradient.addActionListener(this);
-		filterPanel.add(buttonFilterGradient);
+//		buttonFilterGradient = new JButton("Gradient Filter");
+//		buttonFilterGradient.addActionListener(this);
+//		filterPanel.add(buttonFilterGradient);
 		buttonExport = new JButton("Export as DICOM");
 		buttonExport.addActionListener(this);
 		filterPanel.add(buttonExport);
-
+		comboBoxFilterGradient = new JComboBox(gradientFilters);
+		comboBoxFilterGradient.setSelectedIndex(1);
+		comboBoxFilterGradient.addActionListener(this);
+		filterPanel.add(comboBoxFilterGradient);
+		
 		controlsPanel.add(sliderPanel, "grow, wrap");
 		controlsPanel.add(filterPanel);
 
@@ -196,11 +204,27 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		} else if (e.getSource().equals(buttonFilterGradient)) {
 			GradientFilter gradient = new GradientFilter();
 			this.crosshairsFlag = gradient.setAllSlices(false);
-			gradient.setFilter("Roberts");
+			//gradient.setFilter("Roberts");
+			gradient.setFilter("Sobel");
 			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(gradient);
 		} else if (e.getSource().equals(buttonExport)) {
 			exportCurrentImage();
+		} else if (e.getSource().equals(comboBoxFilterGradient)) {
+			Object selected = comboBoxFilterGradient.getSelectedItem();
+			if (selected.equals("Roberts")) {
+				GradientFilter gradient = new GradientFilter();
+				this.crosshairsFlag = gradient.setAllSlices(false);
+				gradient.setFilter("Roberts");
+				gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+				applyFilter(gradient);
+			} else if (selected.equals("Sobel")) {
+				GradientFilter gradient = new GradientFilter();
+				this.crosshairsFlag = gradient.setAllSlices(false);
+				gradient.setFilter("Sobel");
+				gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+				applyFilter(gradient);
+			}
 		}
 	}
 
