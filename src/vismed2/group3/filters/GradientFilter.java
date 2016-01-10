@@ -12,12 +12,6 @@ public class GradientFilter implements VtkJavaFilter {
 	private int sliceAlong_Z = 0;
 	private boolean doAllSlices = false;
 
-//	public void SetKernelSize(int height, int width, int depth) {
-//		this.filter_height = height;
-//		this.filter_width = width;
-//		this.filter_depth = depth;
-//	}
-
 	public void setDoAllSlices(boolean doAllSlices) {
 		this.doAllSlices = doAllSlices;
 	}
@@ -62,18 +56,7 @@ public class GradientFilter implements VtkJavaFilter {
 		double pixelValue;
 
 		if (doAllSlices) { // iterate through the image/ through all slices
-			for (int slice = 0; slice < dims[2]; slice++) {
-				for (int width = 0; width < dims[1] - 1; width++) {
-					for (int height = 0; height < dims[0] - 1; height++) {
-						System.err.println("to be done...");
-//						pixelValue1 = imgData.GetScalarComponentAsDouble(height, width+1, slice, 0);
-//						pixelValue2 = imgData.GetScalarComponentAsDouble(height+1, width, slice, 0) * (-1);
-//						
-//						pixelValue = pixelValue1 / 4 + pixelValue2 / 4;
-//						out.SetScalarComponentFromDouble(height, width, slice, 0, pixelValue);
-					}
-				}
-			}
+			System.err.println("not awailable for this algorithm...");
 		} else { // only do active slice
 			for (int slice = 0; slice < dims[2]; slice++) {
 				for (int width = 0; width < dims[1]; width++) {
@@ -216,7 +199,7 @@ public class GradientFilter implements VtkJavaFilter {
 	/**
 	 * filterName hast to be one of the following: 
 	 * 1) Roberts
-	 * 2) Sobl
+	 * 2) Sobel
 	 * @param filter
 	 */
 	public void setFilter(String filterName) {

@@ -51,8 +51,10 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private ProgressMonitor progressMonitor;
 	private boolean crosshairsFlag = false;
 	private JComboBox comboBoxFilterGradient;
+	private JComboBox comboBoxDoAll;
 	String[] gradientFilters = { "Roberts", "Sobel" };
-	
+	String[] doAll = { "All slices", "Active slice" };
+
 	// -----------------------------------------------------------------
 	// Load VTK library and print which library was not properly loaded
 	static {
@@ -72,8 +74,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		// Get DICOM image data
 		dicomReader = new vtkDICOMImageReader();
-		//File directory = new File("data/Dentascan-0.75-H60s-3");
-		File directory = new File("data/Bassin");
+		File directory = new File("data/Dentascan-0.75-H60s-3");
+		//File directory = new File("data/Bassin");
 		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
 																	// path
 																	// causing
@@ -86,7 +88,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		currentImageData_backup.CopyStructure(currentImageData);
 		currentImageData_backup.CopyAttributes(currentImageData);
 		currentImageData_backup.DeepCopy(currentImageData);
-		
+
 		panel0 = new ImageViewerPanel(currentImageData);
 		panel1 = new ImageViewerPanel(currentImageData);
 		panel2 = new ImageViewerPanel(currentImageData);
@@ -112,21 +114,25 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
 		buttonFilterTreshold = new JButton("Treshold Filter");
 		buttonFilterTreshold.addActionListener(this);
-		filterPanel.add(buttonFilterTreshold);
+		filterPanel.add(buttonFilterTreshold, "cell 0 0");
 		buttonFilterMedian = new JButton("Median Filter");
 		buttonFilterMedian.addActionListener(this);
-		filterPanel.add(buttonFilterMedian, "wrap");
+		filterPanel.add(buttonFilterMedian, "cell 0 1");
+		comboBoxDoAll = new JComboBox(doAll);
+		comboBoxDoAll.setSelectedIndex(1);
+		comboBoxDoAll.addActionListener(this);
+		filterPanel.add(comboBoxDoAll, "cell 0 2");
 		buttonFilterMIP = new JButton("MIP");
 		buttonFilterMIP.addActionListener(this);
-		filterPanel.add(buttonFilterMIP);
+		filterPanel.add(buttonFilterMIP, "cell 1 0");
 		buttonExport = new JButton("Export as DICOM");
 		buttonExport.addActionListener(this);
-		filterPanel.add(buttonExport);
+		filterPanel.add(buttonExport, "cell 1 1");
 		comboBoxFilterGradient = new JComboBox(gradientFilters);
 		comboBoxFilterGradient.setSelectedIndex(1);
 		comboBoxFilterGradient.addActionListener(this);
-		filterPanel.add(comboBoxFilterGradient);
-		
+		filterPanel.add(comboBoxFilterGradient, "cell 1 2");
+
 		controlsPanel.add(sliderPanel, "grow, wrap");
 		controlsPanel.add(filterPanel);
 
@@ -174,56 +180,96 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource().equals(sliceSlider0)) {
 			currentSlice0 = sliceSlider0.getValue();
-			if (crosshairsFlag) { panel0.setInputData(currentImageData_backup); }
+			if (crosshairsFlag) {
+				panel0.setInputData(currentImageData_backup);
+			}
 			panel0.setSlice(currentSlice0);
 		} else if (e.getSource().equals(sliceSlider1)) {
 			currentSlice1 = sliceSlider1.getValue();
-			if (crosshairsFlag) { panel1.setInputData(currentImageData_backup); } 
+			if (crosshairsFlag) {
+				panel1.setInputData(currentImageData_backup);
+			}
 			panel1.setSlice(currentSlice1);
 		} else if (e.getSource().equals(sliceSlider2)) {
 			currentSlice2 = sliceSlider2.getValue();
-			if (crosshairsFlag) { panel2.setInputData(currentImageData_backup); } 
+			if (crosshairsFlag) {
+				panel2.setInputData(currentImageData_backup);
+			}
 			panel2.setSlice(currentSlice2);
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		// Threshold
 		if (e.getSource().equals(buttonFilterTreshold)) {
 			ThresholdFilter threshold = new ThresholdFilter();
-			this.crosshairsFlag = threshold.setAllSlices(false);
+			Object selected = comboBoxDoAll.getSelectedItem();
+			if (selected.equals("All slices")) {
+				crosshairsFlag = threshold.setAllSlices(true);
+			} else {
+				crosshairsFlag = threshold.setAllSlices(false);
+			}
 			threshold.setUpperThreshold(1000.0);
 			threshold.setLowerThreshold(500.0);
 			threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(threshold);
-		} else if (e.getSource().equals(buttonFilterMedian)) {
+		}
+		// Median
+		else if (e.getSource().equals(buttonFilterMedian)) {
 			MedianFilter median = new MedianFilter();
-			median.SetKernelSize(3, 3, 3); 
-			this.crosshairsFlag = median.setAllSlices(false);
+			median.SetKernelSize(3, 3, 3);
+			Object selected = comboBoxDoAll.getSelectedItem();
+			if (selected.equals("All slices")) {
+				crosshairsFlag = median.setAllSlices(true);
+			} else {
+				crosshairsFlag = median.setAllSlices(false);
+			}
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
-		} else if (e.getSource().equals(buttonFilterMIP)) {
+
+		}
+		// MIP
+		else if (e.getSource().equals(buttonFilterMIP)) {
 			MIP mip = new MIP();
-			//this.crosshairsFlag = true;
-			//gradient.setFilter("Roberts");
-			mip.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-			applyFilter(mip);
-		} else if (e.getSource().equals(buttonExport)) {
+			Object doAllSlices = comboBoxDoAll.getSelectedItem();
+			if (doAllSlices.equals("All slices")) {
+				statusBar.setMessage("Not awailable for Gradient!");
+			} else {
+				crosshairsFlag = true;
+				mip.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+				applyFilter(mip);
+			}
+		}
+		// Export
+		else if (e.getSource().equals(buttonExport)) {
 			exportCurrentImage();
-		} else if (e.getSource().equals(comboBoxFilterGradient)) {
+		}
+		// Gradient Filter - Roberts / Sobel
+		else if (e.getSource().equals(comboBoxFilterGradient)) {
 			Object selected = comboBoxFilterGradient.getSelectedItem();
 			if (selected.equals("Roberts")) {
 				GradientFilter gradient = new GradientFilter();
-				this.crosshairsFlag = gradient.setAllSlices(false);
-				gradient.setFilter("Roberts");
-				gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-				applyFilter(gradient);
+				Object doAllSlices = comboBoxDoAll.getSelectedItem();
+				if (doAllSlices.equals("All slices")) {
+					statusBar.setMessage("Not awailable for Gradient!");
+				} else {
+					crosshairsFlag = gradient.setAllSlices(false);
+					gradient.setFilter("Roberts");
+					gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+					applyFilter(gradient);
+				}
 			} else if (selected.equals("Sobel")) {
 				GradientFilter gradient = new GradientFilter();
-				this.crosshairsFlag = gradient.setAllSlices(false);
-				gradient.setFilter("Sobel");
-				gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-				applyFilter(gradient);
+				Object doAllSlices = comboBoxDoAll.getSelectedItem();
+				if (doAllSlices.equals("All slices")) {
+					statusBar.setMessage("Not awailable for Gradient!");
+				} else {
+					crosshairsFlag = gradient.setAllSlices(false);
+					gradient.setFilter("Sobel");
+					gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+					applyFilter(gradient);
+				}
 			}
 		}
 	}
@@ -271,11 +317,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	}
 
 	private void exportCurrentImage() {
-		final String msgTemplate = "Completed %d of %d slices.\n";
-		final int numberOfImagesToExport = currentImageData.GetDimensions()[2];
-		
-		class ExportTask extends SwingWorker<Void, Void>implements ChangeListener {
-			
+		class ExportTask extends SwingWorker<Void, Void> implements ChangeListener {
 			@Override
 			public Void doInBackground() {
 				DicomExporter exporter = new DicomExporter();
@@ -293,7 +335,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			public void stateChanged(ChangeEvent e) {
 				int progress = (Integer) e.getSource();
 				progressMonitor.setProgress(progress);
-				String message = String.format(msgTemplate, progress, numberOfImagesToExport);
+				String message = String.format("Completed %d of 166 slices.\n", progress);
 				progressMonitor.setNote(message);
 				if (progressMonitor.isCanceled() || isDone()) {
 					if (progressMonitor.isCanceled()) {
@@ -307,8 +349,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			}
 		}
 
-		progressMonitor = new ProgressMonitor(this, "Exporting current image to DICOM", String.format(msgTemplate, 0, numberOfImagesToExport),
-				0, numberOfImagesToExport);
+		progressMonitor = new ProgressMonitor(this, "Exporting current image to DICOM", "Completed 0 of 166 slices.\n",
+				0, 166);
 		progressMonitor.setProgress(0);
 		buttonExport.setEnabled(false);
 		ExportTask task = new ExportTask();
