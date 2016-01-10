@@ -1,5 +1,6 @@
 package vismed2.group3.filters;
 
+import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 public class GradientFilter implements VtkJavaFilter {
@@ -54,11 +55,14 @@ public class GradientFilter implements VtkJavaFilter {
 		double pixelValue3;
 		double pixelValue4;
 		double pixelValue;
-
+		int progress = 0;
+		
 		if (doAllSlices) { // iterate through the image/ through all slices
 			System.err.println("not awailable for this algorithm...");
 		} else { // only do active slice
 			for (int slice = 0; slice < dims[2]; slice++) {
+				progress = (int)((double) 100/dims[1] * slice);
+				VisMedVTK.setStatusBar("Applying Roberts Filter. Progress: " + progress + " %");
 				for (int width = 0; width < dims[1]; width++) {
 					for (int height = 0; height < dims[0]; height++) {
 						if (slice == sliceAlong_X) { // along X
@@ -113,8 +117,11 @@ public class GradientFilter implements VtkJavaFilter {
 				
 				double[] pixelValue1 = new double[12];
 				double pixelValue;
+				int progress = 0;
 				
 				for (int slice = 0; slice < dims[2] - 3; slice++) {
+					progress = (int)((double) 100/dims[1] * slice);
+					VisMedVTK.setStatusBar("Applying Sobel Filter. Progress: " + progress + " %");
 					for (int width = 0; width < dims[1] - 3; width++) {
 						for (int height = 0; height < dims[0] - 3; height++) {
 							if (slice == sliceAlong_X) { // along X

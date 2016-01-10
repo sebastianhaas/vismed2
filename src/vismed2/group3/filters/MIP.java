@@ -1,5 +1,6 @@
 package vismed2.group3.filters;
 
+import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 public class MIP implements VtkJavaFilter {
@@ -22,9 +23,12 @@ public class MIP implements VtkJavaFilter {
 		out.CopyAttributes(imgData);
 		out.DeepCopy(imgData);
 		double pixelValue;
-
+		int progress = 0;
+		
 		// scanline along X
 		for (int width = 0; width < dims[1]; width++) {
+			progress = (int)((double) 100/dims[1] * width);
+			VisMedVTK.setStatusBar("Applying MIP. Progress: " + progress + " %");
 			for (int height = 0; height < dims[0]; height++) {
 				for (int slice = 0; slice < dims[2]; slice++) {
 					// scanline along X

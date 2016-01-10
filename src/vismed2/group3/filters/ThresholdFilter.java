@@ -1,5 +1,6 @@
 package vismed2.group3.filters;
 
+import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 /**
@@ -29,11 +30,14 @@ public class ThresholdFilter implements VtkJavaFilter {
 		out.CopyAttributes(imgData);
 		out.DeepCopy(imgData);
 		double pixelValue;
-
+		int progress;
+		
 		// iterate over all slices and set every pixel 0 which isn't bigger than
 		// the threshold
 		if (doAllSlices) {
 			for (int slice = 0; slice < dims[2]; slice++) {
+				progress = (int)((double) 100/dims[1] * slice);
+				VisMedVTK.setStatusBar("Applying Threshold Filter. Progress: " + progress + " %");
 				for (int width = 0; width < dims[1]; width++) {
 					for (int height = 0; height < dims[0]; height++) {
 						pixelValue = imgData.GetScalarComponentAsDouble(height, width, slice, 0);
@@ -49,6 +53,8 @@ public class ThresholdFilter implements VtkJavaFilter {
 			// iterate over relevant slices and set every pixel 0 which isn't
 			// bigger than the threshold (YZ) -> Along X
 			for (int slice = 0; slice < dims[2]; slice++) {
+				progress = (int)((double) 100/dims[1] * slice);
+				VisMedVTK.setStatusBar("Applying Threshold Filter. Progress: " + progress + " %");
 				for (int width = 0; width < dims[1]; width++) {
 					for (int height = 0; height < dims[0]; height++) {
 						if (slice == sliceAlong_X) { // along X

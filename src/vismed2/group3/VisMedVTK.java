@@ -47,7 +47,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private JButton buttonFilterMedian;
 	private JButton buttonFilterMIP;
 	private JButton buttonExport;
-	private StatusBar statusBar;
+	private static StatusBar statusBar;
 	private ProgressMonitor progressMonitor;
 	private boolean crosshairsFlag = false;
 	private JComboBox comboBoxFilterGradient;
@@ -355,5 +355,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		buttonExport.setEnabled(false);
 		ExportTask task = new ExportTask();
 		task.execute();
+	}
+	
+	public static void setStatusBar(String status) {
+		statusBar.setMessage(status);
 	}
 }

@@ -2,6 +2,7 @@ package vismed2.group3.filters;
 
 import java.util.Arrays;
 
+import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 /**
@@ -40,9 +41,12 @@ public class MedianFilter implements VtkJavaFilter {
 		// do actual filtering
 		double[] kernel = new double[filter_height * filter_width * filter_depth];
 		double pixelValue;
-
+		int progress = 0;
+		
 		if (doAllSlices) { // iterate through the image/ through all slices
 			for (int slice = filter_depth; slice < dims[2] - filter_depth; slice++) {
+				progress = (int)((double) 100/dims[1] * slice);
+				VisMedVTK.setStatusBar("Applying Median Filter. Progress: " + progress + " %");
 				for (int width = filter_width; width < dims[1] - filter_width; width++) {
 					for (int height = filter_height; height < dims[0] - filter_height; height++) {
 						// fill values into kernel
@@ -69,6 +73,8 @@ public class MedianFilter implements VtkJavaFilter {
 			}
 		} else { // do only active slices
 			for (int slice = 0; slice < dims[2]; slice++) {
+				progress = (int)((double) 100/dims[1] * slice);
+				VisMedVTK.setStatusBar("Applying Median Filter. Progress: " + progress + " %");
 				for (int width = filter_width; width < dims[1]; width++) {
 					for (int height = filter_height; height < dims[0]; height++) {
 
