@@ -66,11 +66,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 
 		// Get DICOM image data
 		dicomReader = new vtkDICOMImageReader();
-		File directory = new File("data/Dentascan-0.75-H60s-3");
-		dicomReader.SetDirectoryName(directory.getAbsolutePath()); // Spaces in
-																	// path
-																	// causing
-																	// troubles
+		File directory = new File("data/Bassin");
+		dicomReader.SetDirectoryName(directory.getAbsolutePath());
 		dicomReader.Update();
 		currentImageData = dicomReader.GetOutput();
 
@@ -234,7 +231,11 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	}
 
 	private void exportCurrentImage() {
+		final String msgTemplate = "Completed %d of %d slices.\n";
+		final int numberOfImagesToExport = currentImageData.GetDimensions()[2];
+		
 		class ExportTask extends SwingWorker<Void, Void>implements ChangeListener {
+			
 			@Override
 			public Void doInBackground() {
 				DicomExporter exporter = new DicomExporter();
@@ -252,7 +253,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			public void stateChanged(ChangeEvent e) {
 				int progress = (Integer) e.getSource();
 				progressMonitor.setProgress(progress);
-				String message = String.format("Completed %d of 166 slices.\n", progress);
+				String message = String.format(msgTemplate, progress, numberOfImagesToExport);
 				progressMonitor.setNote(message);
 				if (progressMonitor.isCanceled() || isDone()) {
 					if (progressMonitor.isCanceled()) {
@@ -266,8 +267,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			}
 		}
 
-		progressMonitor = new ProgressMonitor(this, "Exporting current image to DICOM", "Completed 0 of 166 slices.\n",
-				0, 166);
+		progressMonitor = new ProgressMonitor(this, "Exporting current image to DICOM", String.format(msgTemplate, 0, numberOfImagesToExport),
+				0, numberOfImagesToExport);
 		progressMonitor.setProgress(0);
 		buttonExport.setEnabled(false);
 		ExportTask task = new ExportTask();
