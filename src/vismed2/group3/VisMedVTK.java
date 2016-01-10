@@ -21,6 +21,7 @@ import javax.swing.event.ChangeListener;
 import net.miginfocom.swing.MigLayout;
 import vismed2.group3.dicom.DicomExporter;
 import vismed2.group3.filters.GradientFilter;
+import vismed2.group3.filters.MIP;
 import vismed2.group3.filters.MedianFilter;
 import vismed2.group3.filters.ThresholdFilter;
 import vismed2.group3.filters.VtkJavaFilter;
@@ -44,7 +45,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private int currentSlice2 = 0;
 	private JButton buttonFilterTreshold;
 	private JButton buttonFilterMedian;
-	private JButton buttonFilterGradient;
+	private JButton buttonFilterMIP;
 	private JButton buttonExport;
 	private StatusBar statusBar;
 	private ProgressMonitor progressMonitor;
@@ -115,9 +116,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		buttonFilterMedian = new JButton("Median Filter");
 		buttonFilterMedian.addActionListener(this);
 		filterPanel.add(buttonFilterMedian, "wrap");
-//		buttonFilterGradient = new JButton("Gradient Filter");
-//		buttonFilterGradient.addActionListener(this);
-//		filterPanel.add(buttonFilterGradient);
+		buttonFilterMIP = new JButton("MIP");
+		buttonFilterMIP.addActionListener(this);
+		filterPanel.add(buttonFilterMIP);
 		buttonExport = new JButton("Export as DICOM");
 		buttonExport.addActionListener(this);
 		filterPanel.add(buttonExport);
@@ -201,13 +202,12 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			this.crosshairsFlag = median.setAllSlices(false);
 			median.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 			applyFilter(median);
-		} else if (e.getSource().equals(buttonFilterGradient)) {
-			GradientFilter gradient = new GradientFilter();
-			this.crosshairsFlag = gradient.setAllSlices(false);
+		} else if (e.getSource().equals(buttonFilterMIP)) {
+			MIP mip = new MIP();
+			//this.crosshairsFlag = true;
 			//gradient.setFilter("Roberts");
-			gradient.setFilter("Sobel");
-			gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
-			applyFilter(gradient);
+			mip.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+			applyFilter(mip);
 		} else if (e.getSource().equals(buttonExport)) {
 			exportCurrentImage();
 		} else if (e.getSource().equals(comboBoxFilterGradient)) {
