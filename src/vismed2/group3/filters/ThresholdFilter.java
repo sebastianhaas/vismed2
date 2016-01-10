@@ -1,7 +1,5 @@
 package vismed2.group3.filters;
 
-import java.util.Arrays;
-
 import vtk.vtkImageData;
 
 /**
@@ -31,10 +29,9 @@ public class ThresholdFilter implements VtkJavaFilter {
 		out.CopyAttributes(imgData);
 		out.DeepCopy(imgData);
 		double pixelValue;
-		
-		// iterate over image and set every pixel 0 which isn't bigger than
+
+		// iterate over all slices and set every pixel 0 which isn't bigger than
 		// the threshold
-		// for perforamce reasons only relevant slices are considered
 		if (doAllSlices) {
 			for (int slice = 0; slice < dims[2]; slice++) {
 				for (int width = 0; width < dims[1]; width++) {
@@ -49,49 +46,45 @@ public class ThresholdFilter implements VtkJavaFilter {
 				}
 			}
 		} else {
-
 			// iterate over relevant slices and set every pixel 0 which isn't
-			// bigger
-			// than the threshold (YZ)
-			for (int width = 0; width < dims[1]; width++) {
-				for (int height = 0; height < dims[0]; height++) {
-					pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
-					if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
-						out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
-					} else {
-						out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, 0);
-					}
-				}
-			}
-
-			// do filter for the pannel1 YX
-			for (int width = 0; width < dims[2]; width++) {
-				for (int height = 0; height < dims[0]; height++) {
-					pixelValue = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, width, 0);
-					if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
-						out.SetScalarComponentFromDouble(height, sliceAlong_Y, width, 0, pixelValue);
-					} else {
-						out.SetScalarComponentFromDouble(height, sliceAlong_Y, width, 0, 0);
-					}
-				}
-			}
-
-			// do filter for the pannel1 YX
-			for (int width = 0; width < dims[1]; width++) {
-				for (int height = 0; height < dims[0]; height++) {
-					pixelValue = imgData.GetScalarComponentAsDouble(sliceAlong_Z, height, width, 0);
-					if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
-						out.SetScalarComponentFromDouble(sliceAlong_Z, height, width, 0, pixelValue);
-					} else {
-						out.SetScalarComponentFromDouble(sliceAlong_Z, height, width, 0, 0);
+			// bigger than the threshold (YZ) -> Along X
+			for (int slice = 0; slice < dims[2]; slice++) {
+				for (int width = 0; width < dims[1]; width++) {
+					for (int height = 0; height < dims[0]; height++) {
+						if (slice == sliceAlong_X) { // along X
+							pixelValue = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
+							if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
+								out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
+							} else {
+								out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, 0);
+							}
+						}
+						if (width == sliceAlong_Y) { // along Y
+							pixelValue = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice, 0);
+							if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
+								out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
+							} else {
+								out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, 0);
+							}
+						}
+						if (height == sliceAlong_Z) { // along Z
+							pixelValue = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width, slice, 0);
+							if (pixelValue >= lowerThreshold && pixelValue <= upperThreshold) {
+								out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
+							} else {
+								out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, 0);
+							}
+						}
 					}
 				}
 			}
 		}
 	}
 
-	public void setAllSlices(boolean doAllSlices) {
+	public boolean setAllSlices(boolean doAllSlices) {
 		this.doAllSlices = doAllSlices;
+		if (doAllSlices) return false;
+		else return true;
 	}
 
 	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
