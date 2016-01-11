@@ -41,6 +41,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private JSlider sliceSlider0;
 	private JSlider sliceSlider1;
 	private JSlider sliceSlider2;
+	private JLabel sliceSliderLabel0;
+	private JLabel sliceSliderLabel1;
+	private JLabel sliceSliderLabel2;
 	private int currentSlice0 = 0;
 	private int currentSlice1 = 0;
 	private int currentSlice2 = 0;
@@ -80,17 +83,23 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		// Prepare controls
 		JPanel controlsPanel = new JPanel(new MigLayout());
 
-		JPanel sliderPanel = new JPanel(new MigLayout());
+		JPanel sliderPanel = new JPanel(new MigLayout("wrap 2, fillx"));
 		sliderPanel.setBorder(BorderFactory.createTitledBorder("Slices"));
 		sliceSlider0 = new JSlider(JSlider.HORIZONTAL, panel0.getSliceMin(), panel0.getSliceMax(), currentSlice0);
 		sliceSlider0.addChangeListener(this);
+		sliceSliderLabel0 = new JLabel(String.format("%d/%d", sliceSlider0.getValue(), sliceSlider0.getMaximum()));
 		sliceSlider1 = new JSlider(JSlider.HORIZONTAL, panel1.getSliceMin(), panel1.getSliceMax(), currentSlice1);
 		sliceSlider1.addChangeListener(this);
+		sliceSliderLabel1 = new JLabel(String.format("%d/%d", sliceSlider1.getValue(), sliceSlider1.getMaximum()));
 		sliceSlider2 = new JSlider(JSlider.HORIZONTAL, panel2.getSliceMin(), panel2.getSliceMax(), currentSlice2);
 		sliceSlider2.addChangeListener(this);
-		sliderPanel.add(sliceSlider0, "wrap");
-		sliderPanel.add(sliceSlider1, "wrap");
-		sliderPanel.add(sliceSlider2, "wrap");
+		sliceSliderLabel2 = new JLabel(String.format("%d/%d", sliceSlider2.getValue(), sliceSlider2.getMaximum()));
+		sliderPanel.add(sliceSlider0);
+		sliderPanel.add(sliceSliderLabel0);
+		sliderPanel.add(sliceSlider1);
+		sliderPanel.add(sliceSliderLabel1);
+		sliderPanel.add(sliceSlider2);
+		sliderPanel.add(sliceSliderLabel2);
 
 		JPanel filterPanel = new JPanel(new MigLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder("Filters"));
@@ -134,6 +143,23 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 					panel0.getImageViewer().GetVtkImageViewer().Render();
 					panel1.getImageViewer().GetVtkImageViewer().Render();
 					panel2.getImageViewer().GetVtkImageViewer().Render();
+
+					// Set slider values since they depend on orientation
+					sliceSlider0.setMinimum(panel0.getImageViewer().GetVtkImageViewer().GetSliceMin());
+					sliceSlider0.setMaximum(panel0.getImageViewer().GetVtkImageViewer().GetSliceMax());
+					currentSlice0 = panel0.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSliderLabel0
+							.setText(String.format("%d/%d", sliceSlider0.getValue(), sliceSlider0.getMaximum()));
+					sliceSlider1.setMinimum(panel1.getImageViewer().GetVtkImageViewer().GetSliceMin());
+					sliceSlider1.setMaximum(panel1.getImageViewer().GetVtkImageViewer().GetSliceMax());
+					currentSlice1 = panel1.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSliderLabel1
+							.setText(String.format("%d/%d", sliceSlider1.getValue(), sliceSlider1.getMaximum()));
+					sliceSlider2.setMinimum(panel2.getImageViewer().GetVtkImageViewer().GetSliceMin());
+					sliceSlider2.setMaximum(panel2.getImageViewer().GetVtkImageViewer().GetSliceMax());
+					currentSlice2 = panel2.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSliderLabel2
+							.setText(String.format("%d/%d", sliceSlider2.getValue(), sliceSlider2.getMaximum()));
 				} catch (InterruptedException iex) {
 				}
 			}
@@ -163,18 +189,21 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 				panel0.setInputData(currentImageData_backup);
 			}
 			panel0.setSlice(currentSlice0);
+			sliceSliderLabel0.setText(String.format("%d/%d", sliceSlider0.getValue(), sliceSlider0.getMaximum()));
 		} else if (e.getSource().equals(sliceSlider1)) {
 			currentSlice1 = sliceSlider1.getValue();
 			if (crosshairsFlag) {
 				panel1.setInputData(currentImageData_backup);
 			}
 			panel1.setSlice(currentSlice1);
+			sliceSliderLabel1.setText(String.format("%d/%d", sliceSlider1.getValue(), sliceSlider1.getMaximum()));
 		} else if (e.getSource().equals(sliceSlider2)) {
 			currentSlice2 = sliceSlider2.getValue();
 			if (crosshairsFlag) {
 				panel2.setInputData(currentImageData_backup);
 			}
 			panel2.setSlice(currentSlice2);
+			sliceSliderLabel2.setText(String.format("%d/%d", sliceSlider2.getValue(), sliceSlider2.getMaximum()));
 		}
 	}
 
