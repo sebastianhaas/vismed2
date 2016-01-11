@@ -391,7 +391,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			public Void doInBackground() {
 				DicomExporter exporter = new DicomExporter();
 				exporter.setChangeListener(this);
-				exporter.exportImageData(currentImageData, "data/output/test");
+				exporter.exportImageData(currentImageData, "data/output/test", dicomReader);
 				return null;
 			}
 
