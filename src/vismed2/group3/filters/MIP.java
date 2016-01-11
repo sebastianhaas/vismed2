@@ -3,6 +3,22 @@ package vismed2.group3.filters;
 import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
+/**
+ * 
+ * @author Sebastian Haas
+ * @author Alexander Tatowsky
+ * <br>
+ * 
+ * The Maximum Intensity Projection searches with scanlines along 
+ * the orthogonal axis for the highest intensity on the scanline. 
+ * This projection mexes the information about depth, so it is no 
+ * longer possible to differ between layers on the scanline. 
+ * 
+ * Wit X-Rays however it is a good and simple method to detect bones, 
+ * since bones have a much higher intensity as soft tisue. 
+ * Also it is used for example for the detection of lung nodules in 
+ * lung cancer screening programs which utilise computed tomography scans.
+ */
 public class MIP implements VtkJavaFilter {
 
 	private final vtkImageData out;
@@ -24,10 +40,10 @@ public class MIP implements VtkJavaFilter {
 		out.DeepCopy(imgData);
 		double pixelValue;
 		int progress = 0;
-		
+
 		// scanline along X
 		for (int width = 0; width < dims[1]; width++) {
-			progress = (int)((double) 100/dims[1] * width);
+			progress = (int) ((double) 100 / dims[1] * width);
 			VisMedVTK.setStatusBar("Applying MIP. Progress: " + progress + " %");
 			for (int height = 0; height < dims[0]; height++) {
 				for (int slice = 0; slice < dims[2]; slice++) {
@@ -49,6 +65,17 @@ public class MIP implements VtkJavaFilter {
 		}
 	}
 
+	/**
+	 * Give information about the active slices. Active slices are the slices
+	 * which are shown at the moment of pressing the filter button.
+	 * 
+	 * @param sliceYZ
+	 *            - along the X achsis
+	 * @param sliceXZ
+	 *            - along the Y achsis
+	 * @param sliceYX
+	 *            - along the Z achsis
+	 */
 	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
 		this.sliceAlong_X = sliceYZ;
 		this.sliceAlong_Y = sliceXZ;

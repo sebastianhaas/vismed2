@@ -4,21 +4,43 @@ import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 /**
+ * @author Sebastian Haas
  * @author Alexander Tatowsky
- * 
+ * <br>
  *         The gradient (=first order deviation) of a image intensity function
  *         is the difference between the intensity of two neighboring pixels.
  * 
  *         Depending on which direction the difference is measured there are
  *         different Kernels:
  * 
- *         GradientXY: Difference in the horizontal and vertical direction: 1 -1
- *         1 1 1 -1 and -1 -1
+ *         GradientXY: Difference in the horizontal and vertical direction:
  * 
- *         Roberts' cross Operator: 0 1 | 1 0 -1 0 | 0 -1
+ *         <pre>
+ * {@code
+ *  1 -1        -1 -1
+ *  1 -1   and   1  1
+ * }
+ *         </pre>
  * 
- *         Sobel Filter: 1 0 -1 | 1 2 1 2 0 -2 | 0 0 0 1 0 -1 | -1 -2 -1
- *
+ *         Roberts' cross Operator:
+ * 
+ *         <pre>
+ * {@code
+ *  0 1 | 1 0 
+ * -1 0 | 0 -1
+ * }
+ *         </pre>
+ * 
+ *         Sobel Filter:
+ * 
+ *         <pre>
+ * {@code
+ *  1 0 -1 |  1  2  1 
+ *  2 0 -2 |  0  0  0 
+ *  1 0 -1 | -1 -2 -1
+ *}
+ *         </pre>
+ * 
  *         The functionality of this filter is only guaranteed for monochrome
  *         DICOM data.
  */
@@ -36,14 +58,21 @@ public class GradientFilter implements VtkJavaFilter {
 		GradientXY, Roberts, Sobel
 	};
 
-	public void setDoAllSlices(boolean doAllSlices) {
-		this.doAllSlices = doAllSlices;
-	}
-
 	public GradientFilter() {
 		out = new vtkImageData();
 	}
 
+	/**
+	 * Give information about the active slices. Active slices are the slices
+	 * which are shown at the moment of pressing the filter button.
+	 * 
+	 * @param sliceYZ
+	 *            - along the X achsis
+	 * @param sliceXZ
+	 *            - along the Y achsis
+	 * @param sliceYX
+	 *            - along the Z achsis
+	 */
 	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
 		this.sliceAlong_X = sliceYZ;
 		this.sliceAlong_Y = sliceXZ;
@@ -63,8 +92,14 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
-	 * GradientXY: Difference in the horizontal and vertical direction: 1 -1 1 1
-	 * 1 -1 and -1 -1
+	 * GradientXY: Difference in the horizontal and vertical direction:
+	 * 
+	 * <pre>
+	 * {@code
+	 *  1 -1        -1 -1
+	 *  1 -1   and   1  1
+	 * }
+	 * </pre>
 	 * 
 	 * @param imgData
 	 */
@@ -162,7 +197,14 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
-	 * Roberts' cross Operator: 0 1 | 1 0 -1 0 | 0 -1
+	 * Roberts' cross Operator:
+	 * 
+	 * <pre>
+	 * {@code
+	 *  0 1 | 1 0 
+	 * -1 0 | 0 -1
+	 * }
+	 * </pre>
 	 */
 	private void doRoberts(vtkImageData imgData) {
 		// Prepare output data
@@ -229,9 +271,15 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
-	 * Sobel Filter
+	 * Sobel Filter:
 	 * 
-	 * 1 0 -1 | 1 2 1 2 0 -2 | 0 0 0 1 0 -1 | -1 -2 -1
+	 * <pre>
+	 * {@code
+	 *  1 0 -1 |  1  2  1 
+	 *  2 0 -2 |  0  0  0 
+	 *  1 0 -1 | -1 -2 -1
+	 *}
+	 * </pre>
 	 */
 	public void doSobel(vtkImageData imgData) {
 		// Prepare output data
@@ -356,13 +404,22 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
+	 * set which type of gradient filter shall be applied. Possible filter types
+	 * are: GradientXY, Roberts, Sobel.
 	 * 
-	 * @param filter
+	 * @param filterType
 	 */
 	public void setFilter(Type filterType) {
 		this.filterType = filterType;
 	}
 
+	/**
+	 * Set the flag whether all slices should be filtered or just the active
+	 * slices
+	 * 
+	 * @param doAllSlices
+	 * @return oposite of set boolean
+	 */
 	public boolean setAllSlices(boolean doAllSlices) {
 		this.doAllSlices = doAllSlices;
 		if (doAllSlices)
