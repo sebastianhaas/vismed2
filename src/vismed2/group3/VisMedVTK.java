@@ -30,6 +30,62 @@ import vtk.vtkDICOMImageReader;
 import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
 
+/**
+ * This class is the application entry point of an university project done for
+ * the visualization of medical data course in the winter term 2015. It launches
+ * a window containing three image views and a control panel. The image views
+ * are showing a monochrome example data set of a basin, retrieved by a CAT
+ * scan.
+ * 
+ * <h4>Usage and Controls</h4> The top-left view shows a XY-, the top-right a
+ * XZ- and the bottom-left view a YZ-oriented interpretation of the data. The
+ * user is able to individually control brightness and contrast for each view by
+ * dragging the mouse up and down respectively left and right. The zoom level
+ * can be controlled using the mouse wheel. The sliders on the right can be used
+ * to control what slice will be shown on the respective view.
+ * 
+ * <h4>Filters</h4> This application offers a set of filters that can be used to
+ * alter the image data. The filters currently built in are:
+ * <ul>
+ * <li>Gradient Filter
+ * <ul>
+ * <li>Gradient XY</li>
+ * <li>Roberts</li>
+ * <li>Sobel</li>
+ * </ul>
+ * </li>
+ * <li>Median</li>
+ * <li>MIP</li>
+ * <li>Thresholding</li>
+ * </ul>
+ * Filters can be applied by selecting the desired filter and clicking the
+ * <i>Apply</i> button. Filters will be either applied to the entire image
+ * volume, or to the actively displayed slices only. This behavior can be
+ * controlled using the <i>Apply filter on...</i> combo box.<br>
+ * <b>Note:</b> Some filters are only available in active-slice-mode due to
+ * performance reasons.
+ * 
+ * <h4>DICOM export</h4> Clicking <i>Export DICOM</i> will start the export
+ * process. The currently displayed image will be exported in DICOM format using
+ * dummy patient information. Keep in mind that some filters will be applied on
+ * the currently active slices only; therefore, the exported DICOM data might
+ * not show the processed image on the default (first) slice. Data will be
+ * written to data/output/. Make sure this directory exists and is writable.
+ * 
+ * <h4>Implementation details</h4> This class uses
+ * {@link vismed2.group3.ImageViewerPanel} to draw VTK views onto a regular
+ * lightweight Swing frame. Due to restrictions of VTK's Java-Wrappings, it is
+ * not possible to access the actual native views until they are initialized and
+ * drawn on the screen. Since the authors did not find an event triggered at
+ * this specific state, a static 1500ms timer is used as a workaround.<br>
+ * <br>
+ * All filters as well as the DICOM export will run in separate non-blocking
+ * worker threads to guarantee application responsiveness.
+ * 
+ * @author Sebastian Haas
+ * @author Alexander Tatowsky
+ *
+ */
 public class VisMedVTK extends JPanel implements ChangeListener, ActionListener {
 	private static final long serialVersionUID = 1L;
 	private vtkDICOMImageReader dicomReader;
@@ -58,6 +114,10 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	String[] filterSelectorItemsActiveSlice = { "Gradient XY", "Median", "MIP", "Roberts", "Sobel", "Treshold" };
 	String[] filterSliceSelectorItems = { "Active slice", "All slices" };
 
+	/**
+	 * Prepares the panel and sets up all VTK components. Afterwards a sample
+	 * data set is loaded and displayed.
+	 */
 	public VisMedVTK() {
 		super(new BorderLayout());
 
@@ -137,27 +197,27 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 			public void run() {
 				try {
 					Thread.sleep(1500);
-					panel0.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXY();
-					panel1.getImageViewer().GetVtkImageViewer().SetSliceOrientationToXZ();
-					panel2.getImageViewer().GetVtkImageViewer().SetSliceOrientationToYZ();
-					panel0.getImageViewer().GetVtkImageViewer().Render();
-					panel1.getImageViewer().GetVtkImageViewer().Render();
-					panel2.getImageViewer().GetVtkImageViewer().Render();
+					panel0.setSliceOrientation(ImageViewerPanel.ORIENTATION_XY);
+					panel1.setSliceOrientation(ImageViewerPanel.ORIENTATION_XZ);
+					panel2.setSliceOrientation(ImageViewerPanel.ORIENTATION_YZ);
+					panel0.render();
+					panel1.render();
+					panel2.render();
 
 					// Set slider values since they depend on orientation
-					sliceSlider0.setMinimum(panel0.getImageViewer().GetVtkImageViewer().GetSliceMin());
-					sliceSlider0.setMaximum(panel0.getImageViewer().GetVtkImageViewer().GetSliceMax());
-					currentSlice0 = panel0.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSlider0.setMinimum(panel0.getSliceMin());
+					sliceSlider0.setMaximum(panel0.getSliceMax());
+					currentSlice0 = panel0.getSlice();
 					sliceSliderLabel0
 							.setText(String.format("%d/%d", sliceSlider0.getValue(), sliceSlider0.getMaximum()));
-					sliceSlider1.setMinimum(panel1.getImageViewer().GetVtkImageViewer().GetSliceMin());
-					sliceSlider1.setMaximum(panel1.getImageViewer().GetVtkImageViewer().GetSliceMax());
-					currentSlice1 = panel1.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSlider1.setMinimum(panel1.getSliceMin());
+					sliceSlider1.setMaximum(panel1.getSliceMax());
+					currentSlice1 = panel1.getSlice();
 					sliceSliderLabel1
 							.setText(String.format("%d/%d", sliceSlider1.getValue(), sliceSlider1.getMaximum()));
-					sliceSlider2.setMinimum(panel2.getImageViewer().GetVtkImageViewer().GetSliceMin());
-					sliceSlider2.setMaximum(panel2.getImageViewer().GetVtkImageViewer().GetSliceMax());
-					currentSlice2 = panel2.getImageViewer().GetVtkImageViewer().GetSlice();
+					sliceSlider2.setMinimum(panel2.getSliceMin());
+					sliceSlider2.setMaximum(panel2.getSliceMax());
+					currentSlice2 = panel2.getSlice();
 					sliceSliderLabel2
 							.setText(String.format("%d/%d", sliceSlider2.getValue(), sliceSlider2.getMaximum()));
 				} catch (InterruptedException iex) {
@@ -303,9 +363,9 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 					panel0.setInputData(currentImageData);
 					panel1.setInputData(currentImageData);
 					panel2.setInputData(currentImageData);
-					panel0.getImageViewer().Render();
-					panel1.getImageViewer().Render();
-					panel2.getImageViewer().Render();
+					panel0.render();
+					panel1.render();
+					panel2.render();
 				} catch (InterruptedException ignore) {
 				} catch (java.util.concurrent.ExecutionException e) {
 					String why = null;
@@ -366,6 +426,13 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		task.execute();
 	}
 
+	/**
+	 * Sets the message displayed in the panel's status bar at the bottom. Can
+	 * be invoked safely from any thread.
+	 * 
+	 * @param status
+	 *            The message to display
+	 */
 	public static void setStatusBar(final String status) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
