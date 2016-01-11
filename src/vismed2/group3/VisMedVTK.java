@@ -75,7 +75,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		panel1 = new ImageViewerPanel(currentImageData);
 		panel2 = new ImageViewerPanel(currentImageData);
 
-		JPanel content = new JPanel(new MigLayout("fill, debug"));
+		JPanel content = new JPanel(new MigLayout("fill, gap 1, insets 0, wrap 2, debug"));
 
 		// Prepare controls
 		JPanel controlsPanel = new JPanel(new MigLayout());
@@ -112,15 +112,15 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 		buttonExport.addActionListener(this);
 		filterPanel.add(buttonExport, "");
 
-		controlsPanel.add(sliderPanel, "grow, wrap");
+		controlsPanel.add(sliderPanel, "wrap");
 		controlsPanel.add(filterPanel);
 
 		content.add(panel0, "grow");
-		content.add(panel1, "grow, wrap");
+		content.add(panel1, "grow");
 		content.add(panel2, "grow");
-		content.add(controlsPanel, "wrap");
+		content.add(controlsPanel, "");
 
-		add(content, BorderLayout.NORTH);
+		add(content, BorderLayout.CENTER);
 		statusBar = new StatusBar();
 		add(statusBar, BorderLayout.SOUTH);
 
