@@ -3,6 +3,29 @@ package vismed2.group3.filters;
 import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
+/**
+ * @author Alexander Tatowsky
+ * 
+ * The gradient (=first order deviation) of a image intensity function is the 
+ * difference between the intensity of two neighboring pixels. 
+ * 
+ * Depending on which direction the difference is measured there are different Kernels: 
+ * 
+ * GradientXY: Difference in the horizontal and vertical direction: 
+ * 1 -1      1  1
+ * 1 -1 and -1 -1
+ * 
+ * Roberts' cross Operator: 
+ *  0 1 | 1  0 
+ * -1 0 | 0 -1
+ * 
+ * Sobel Filter: 
+ * 1  0 -1  |  1  2  1
+ * 2  0 -2  |  0  0  0
+ * 1  0 -1  | -1 -2 -1
+ *
+ * The functionality of this filter is only guaranteed for grayvalue dicom data.
+ */
 public class GradientFilter implements VtkJavaFilter {
 
 	private final vtkImageData out;
@@ -33,10 +56,105 @@ public class GradientFilter implements VtkJavaFilter {
 			doRoberts(imgData);
 		} else if (filterName.equals("Sobel")) {
 			doSobel(imgData);
+		} else if (filterName.equals("Gradient")) {
+			doGradient(imgData);
 		} else System.err.println("Unknown Gradient Algorithm!");
 		
 	}
 
+	/**
+	 * GradientXY: Difference in the horizontal and vertical direction: 
+	 * 1 -1      1  1
+	 * 1 -1 and -1 -1
+	 * 
+	 * @param imgData
+	 */
+	private void doGradient(vtkImageData imgData) {
+		// Prepare output data
+				int[] dims = imgData.GetDimensions();
+				out.Initialize();
+				out.CopyStructure(imgData);
+				out.CopyAttributes(imgData);
+				out.DeepCopy(imgData);
+				
+				double[] pixelValue1 = new double[12];
+				double pixelValue;
+				int progress = 0;
+				
+				if (doAllSlices) { // iterate through the image/ through all slices
+					System.err.println("not awailable for this algorithm...");
+				} else { // only do active slice
+					for (int slice = 0; slice < dims[2]; slice++) {
+						progress = (int)((double) 100/dims[1] * slice);
+						VisMedVTK.setStatusBar("Applying Roberts Filter. Progress: " + progress + " %");
+						for (int width = 0; width < dims[1]; width++) {
+							for (int height = 0; height < dims[0]; height++) {
+								if (slice == sliceAlong_X) { // along X
+									int value = 0;
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height + 1, width, sliceAlong_X, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width + 1, sliceAlong_X, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height + 1, width + 1, sliceAlong_X, 0);
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, sliceAlong_X, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height + 1, width, sliceAlong_X, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width + 1, sliceAlong_X, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height + 1, width + 1, sliceAlong_X, 0);
+									
+									double sumValues = 0;
+									for (int i = 0; i < pixelValue1.length; i++) {
+										sumValues += pixelValue1[i];
+									}
+									pixelValue = (sumValues) / 8;
+									out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
+								}
+								if (width == sliceAlong_Y) {
+									int value = 0;
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice+1, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height+1, width, slice+1, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width, slice, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height+1, width, slice, 0);
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice+1, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height+1, width, slice+1, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height+1, width, slice, 0);
+									
+									double sumValues = 0;
+									for (int i = 0; i < pixelValue1.length; i++) {
+										sumValues += pixelValue1[i];
+									}
+									pixelValue = (sumValues) / 8;
+									out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
+								}
+								if (height == sliceAlong_Z) {
+									int value = 0;
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice + 1, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width + 1, slice, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width + 1, slice + 1, 0);
+									
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width, slice, 0);
+									pixelValue1[value++] = imgData.GetScalarComponentAsDouble(height, width + 1, slice, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width, slice + 1, 0);
+									pixelValue1[value++] = - imgData.GetScalarComponentAsDouble(height, width + 1, slice + 1, 0);
+									
+									double sumValues = 0;
+									for (int i = 0; i < pixelValue1.length; i++) {
+										sumValues += pixelValue1[i];
+									}
+									pixelValue = (sumValues) / 8;
+									out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
+								}
+							}
+						}
+					}
+				}
+	}
+	
 	/**
 	 * Roberts' cross Operator: 
 	 *  0 1 | 1 0 
@@ -103,6 +221,8 @@ public class GradientFilter implements VtkJavaFilter {
 	}
 
 	/**
+	 * Sobel Filter
+	 * 
 	 * 1  0 -1  |  1  2  1
 	 * 2  0 -2  |  0  0  0
 	 * 1  0 -1  | -1 -2 -1
@@ -207,6 +327,8 @@ public class GradientFilter implements VtkJavaFilter {
 	 * filterName hast to be one of the following: 
 	 * 1) Roberts
 	 * 2) Sobel
+	 * 3) Gradient
+	 * 
 	 * @param filter
 	 */
 	public void setFilter(String filterName) {

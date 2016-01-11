@@ -52,7 +52,7 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 	private boolean crosshairsFlag = false;
 	private JComboBox comboBoxFilterGradient;
 	private JComboBox comboBoxDoAll;
-	String[] gradientFilters = { "Roberts", "Sobel" };
+	String[] gradientFilters = { "Roberts", "Sobel", "Gradient XY" };
 	String[] doAll = { "All slices", "Active slice" };
 
 	// -----------------------------------------------------------------
@@ -267,6 +267,17 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 				} else {
 					crosshairsFlag = gradient.setAllSlices(false);
 					gradient.setFilter("Sobel");
+					gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
+					applyFilter(gradient);
+				}
+			} else if (selected.equals("Gradient XY")) {
+				GradientFilter gradient = new GradientFilter();
+				Object doAllSlices = comboBoxDoAll.getSelectedItem();
+				if (doAllSlices.equals("All slices")) {
+					statusBar.setMessage("Not awailable for Gradient!");
+				} else {
+					crosshairsFlag = gradient.setAllSlices(false);
+					gradient.setFilter("Gradient");
 					gradient.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 					applyFilter(gradient);
 				}

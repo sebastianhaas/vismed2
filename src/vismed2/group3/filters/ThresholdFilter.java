@@ -4,8 +4,14 @@ import vismed2.group3.VisMedVTK;
 import vtk.vtkImageData;
 
 /**
- * The ThresholdFilter sets all pixels below the threshold as background, all
- * pixels above stay are given the original value
+ * @author Alexander Tatowsky
+ * 
+ * The ThresholdFilter sets all pixels outside of an Threshold- interval as background, all
+ * pixels inside the interval stay the original value. 
+ * The result can be shown only on the active slice or can be applied to all slices by 
+ * setting the boolean doAllSlices to true. 
+ * 
+ * The functionality of this filter is only guaranteed for grayvalue dicom data.
  */
 public class ThresholdFilter implements VtkJavaFilter {
 
@@ -21,6 +27,11 @@ public class ThresholdFilter implements VtkJavaFilter {
 		out = new vtkImageData();
 	}
 
+	/**
+	 * Apply the Threshold Filter. Pixels outside of the threshold- span are set to background. 
+	 * Pixels inside of the threshold- interval stay the same. This can either be applied to 
+	 * the active orthogonal slices or to the whole dataset by setting the boolean doAllSlices.
+	 */
 	@Override
 	public void applyFilter(vtkImageData imgData) {
 		// Prepare output data
@@ -87,31 +98,58 @@ public class ThresholdFilter implements VtkJavaFilter {
 		}
 	}
 
+	/**
+	 * Set the flag whether all slices should be filtered or just the active slices 
+	 * @param doAllSlices
+	 * @return oposite of set boolean
+	 */
 	public boolean setAllSlices(boolean doAllSlices) {
 		this.doAllSlices = doAllSlices;
 		if (doAllSlices) return false;
 		else return true;
 	}
 
+	/**
+	 * Give information about the active slices. Active slices are the slices which 
+	 * are shown at the moment of pressing the filter button. 
+	 * 
+	 * @param sliceYZ
+	 * @param sliceXZ
+	 * @param sliceYX
+	 */
 	public void setSlice(int sliceYZ, int sliceXZ, int sliceYX) {
 		this.sliceAlong_X = sliceYZ;
 		this.sliceAlong_Y = sliceXZ;
 		this.sliceAlong_Z = sliceYX;
 	}
 
+	/**
+	 * Set the upper limit if the threshold interval 
+	 * @param threshold
+	 */
 	public void setUpperThreshold(double threshold) {
 		this.upperThreshold = threshold;
 	}
 
+	/**
+	 * Set the lower limit if the threshold interval 
+	 * @param threshold
+	 */
 	public void setLowerThreshold(double threshold) {
 		this.lowerThreshold = threshold;
 	}
 
+	/**
+	 * Return the name of the filter
+	 */
 	@Override
 	public String getFilterName() {
 		return "Threshold";
 	}
 
+	/**
+	 * return the result of the filter
+	 */
 	@Override
 	public vtkImageData GetOutput() {
 		return out;
