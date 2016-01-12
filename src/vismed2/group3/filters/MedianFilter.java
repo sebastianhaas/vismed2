@@ -7,8 +7,7 @@ import vtk.vtkImageData;
 
 /**
  * @author Sebastian Haas
- * @author Alexander Tatowsky
- * <br>
+ * @author Alexander Tatowsky <br>
  *         The median filter creates a cube in the three dimensional space and
  *         convolutes it over a dicom dataset. This can be applied over the
  *         active slices or all slices of the data set by setting the boolean
@@ -20,6 +19,10 @@ import vtk.vtkImageData;
  *         <li>determine the median of all pixel values</li>
  *         <li>set the center of the kernel to the kernel's median</li>
  *         </ul>
+ * 
+ *         The median filter is mainly used for noise reduction. Noise like salt
+ *         & pepper can reduced very well but the image is softened and looses
+ *         detail.
  * 
  *         The functionality of this filter is only guaranteed for grayvalue
  *         dicom data.
@@ -76,7 +79,7 @@ public class MedianFilter implements VtkJavaFilter {
 
 		if (doAllSlices) {
 			// iterate through the image/ through all slices
-			for (int slice = filter_depth; slice < dims[2] - filter_depth; slice++) {
+			for (int slice = 0; slice < dims[2] - filter_depth; slice++) {
 				// show progress at GUI
 				progress = (int) ((double) 100 / dims[1] * slice);
 				VisMedVTK.setStatusBar("Applying Median Filter. Progress: " + progress + " %");
@@ -86,10 +89,19 @@ public class MedianFilter implements VtkJavaFilter {
 
 						// fill values into kernel
 						int count = 0;
-						for (int x = slice - filter_depth; x < slice; x++) {
+						for (int x = slice - filter_depth / 2; x < slice + filter_depth / 2; x++) {
 							for (int y = width - filter_width; y < width; y++) {
 								for (int z = height - filter_height; z < height; z++) {
-									pixelValue = imgData.GetScalarComponentAsDouble(z, y, x, 0);
+									// clipping
+									if (x < 0) { // kernel < first Slice
+										pixelValue = imgData.GetScalarComponentAsDouble(z, y, 0, 0);
+									} // kernel > last slice
+									else if (x > dims[1]) {
+										int lastSlice = sliceAlong_X - (sliceAlong_X - dims[2]);
+										pixelValue = imgData.GetScalarComponentAsDouble(z, y, lastSlice, 0);
+									} else {
+										pixelValue = imgData.GetScalarComponentAsDouble(z, y, x, 0);
+									}
 									kernel[count++] = pixelValue;
 								}
 							}
@@ -101,10 +113,7 @@ public class MedianFilter implements VtkJavaFilter {
 						} else { // uneven kernel size
 							pixelValue = kernel[kernel.length / 2];
 						}
-						int kernelCenterX = filter_depth / 2 + 1;
-						int kernelCenterY = filter_width / 2 + 1;
-						int kernelCenterZ = filter_height / 2 + 1;
-						out.SetScalarComponentFromDouble(kernelCenterX, kernelCenterY, kernelCenterZ, 0, pixelValue);
+						out.SetScalarComponentFromDouble(height, width, slice, 0, pixelValue);
 					}
 				}
 			}
@@ -118,7 +127,7 @@ public class MedianFilter implements VtkJavaFilter {
 						if (slice == sliceAlong_X) { // along X
 							// fill values into kernel
 							int count = 0;
-							for (int x = sliceAlong_X - filter_depth; x < sliceAlong_X; x++) {
+							for (int x = sliceAlong_X - filter_depth / 2; x < sliceAlong_X + filter_depth / 2; x++) {
 								for (int y = width - filter_width; y < width; y++) {
 									for (int z = height - filter_height; z < height; z++) {
 										// clipping
@@ -149,7 +158,7 @@ public class MedianFilter implements VtkJavaFilter {
 							if (slice != sliceAlong_X) {
 								// fill values into kernel
 								int count = 0;
-								for (int x = slice - filter_depth; x < slice; x++) {
+								for (int x = slice - filter_depth / 2; x < slice + filter_depth / 2; x++) {
 									for (int y = width - filter_width; y < width; y++) {
 										for (int z = height - filter_height; z < height; z++) {
 											// clipping
@@ -184,7 +193,7 @@ public class MedianFilter implements VtkJavaFilter {
 							if (slice != sliceAlong_X && width != sliceAlong_Y) {
 								// fill values into kernel
 								int count = 0;
-								for (int x = slice - filter_depth; x < slice; x++) {
+								for (int x = slice - filter_depth / 2; x < slice + filter_depth / 2; x++) {
 									for (int y = width - filter_width; y < width; y++) {
 										for (int z = height - filter_height; z < height; z++) {
 											// clipping

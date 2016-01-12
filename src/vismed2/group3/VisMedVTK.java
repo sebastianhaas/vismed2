@@ -311,8 +311,8 @@ public class VisMedVTK extends JPanel implements ChangeListener, ActionListener 
 				} else {
 					crosshairsFlag = threshold.setAllSlices(false);
 				}
-				threshold.setUpperThreshold(1000.0);
-				threshold.setLowerThreshold(500.0);
+				threshold.setUpperThreshold(1400.0);
+				threshold.setLowerThreshold(250.0);
 				threshold.setSlice(panel0.getSlice(), panel1.getSlice(), panel2.getSlice());
 				applyFilter(threshold);
 			} else if (comboBoxFilterSelector.getSelectedItem().equals("MIP")) {
