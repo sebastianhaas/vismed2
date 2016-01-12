@@ -147,7 +147,7 @@ public class GradientFilter implements VtkJavaFilter {
 							for (int i = 0; i < pixelValue1.length; i++) {
 								sumValues += pixelValue1[i];
 							}
-							pixelValue = (sumValues) / 8;
+							pixelValue = (sumValues);
 							out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
 						}
 						if (width == sliceAlong_Y) {
@@ -167,7 +167,7 @@ public class GradientFilter implements VtkJavaFilter {
 							for (int i = 0; i < pixelValue1.length; i++) {
 								sumValues += pixelValue1[i];
 							}
-							pixelValue = (sumValues) / 8;
+							pixelValue = (sumValues);
 							out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
 						}
 						if (height == sliceAlong_Z) {
@@ -187,7 +187,7 @@ public class GradientFilter implements VtkJavaFilter {
 							for (int i = 0; i < pixelValue1.length; i++) {
 								sumValues += pixelValue1[i];
 							}
-							pixelValue = (sumValues) / 8;
+							pixelValue = (sumValues);
 							out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
 						}
 					}
@@ -238,7 +238,7 @@ public class GradientFilter implements VtkJavaFilter {
 							pixelValue4 = imgData.GetScalarComponentAsDouble(height + 1, width + 1, sliceAlong_X, 0)
 									* (-1);
 
-							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4) / 8;
+							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4);
 							out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
 						}
 						if (width == sliceAlong_Y) {
@@ -249,7 +249,7 @@ public class GradientFilter implements VtkJavaFilter {
 							pixelValue3 = imgData.GetScalarComponentAsDouble(height + 1, sliceAlong_Y, slice, 0);
 							pixelValue4 = imgData.GetScalarComponentAsDouble(height, sliceAlong_Y, slice + 1, 0) * (-1);
 
-							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4) / 8;
+							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4);
 							out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
 						}
 						if (height == sliceAlong_Z) {
@@ -261,7 +261,7 @@ public class GradientFilter implements VtkJavaFilter {
 							pixelValue4 = imgData.GetScalarComponentAsDouble(sliceAlong_Z, width + 1, slice + 1, 0)
 									* (-1);
 
-							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4) / 8;
+							pixelValue = (pixelValue1 + pixelValue2 + pixelValue3 + pixelValue4);
 							out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
 						}
 					}
@@ -329,7 +329,7 @@ public class GradientFilter implements VtkJavaFilter {
 						for (int i = 0; i < pixelValue1.length; i++) {
 							sumValues += pixelValue1[i];
 						}
-						pixelValue = (sumValues) / 18;
+						pixelValue = (sumValues);
 						out.SetScalarComponentFromDouble(height, width, sliceAlong_X, 0, pixelValue);
 					}
 					if (width == sliceAlong_Y) {
@@ -363,7 +363,7 @@ public class GradientFilter implements VtkJavaFilter {
 						for (int i = 0; i < pixelValue1.length; i++) {
 							sumValues += pixelValue1[i];
 						}
-						pixelValue = (sumValues) / 18;
+						pixelValue = (sumValues);
 						out.SetScalarComponentFromDouble(height, sliceAlong_Y, slice, 0, pixelValue);
 					}
 					if (height == sliceAlong_Z) {
@@ -395,7 +395,7 @@ public class GradientFilter implements VtkJavaFilter {
 						for (int i = 0; i < pixelValue1.length; i++) {
 							sumValues += pixelValue1[i];
 						}
-						pixelValue = (sumValues) / 18;
+						pixelValue = (sumValues);
 						out.SetScalarComponentFromDouble(sliceAlong_Z, width, slice, 0, pixelValue);
 					}
 				}
